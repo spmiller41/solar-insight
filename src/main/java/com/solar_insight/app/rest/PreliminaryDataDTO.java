@@ -13,8 +13,8 @@ public class PreliminaryDataDTO {
     @JsonProperty("longitude")
     private double longitude;
 
-    @JsonProperty("clientIP")
-    private String clientIP;
+    @JsonProperty("clientIp")
+    private String clientIp;
 
     @JsonProperty("avgMonthlyEnergyBill")
     private String avgMonthlyEnergyBill;
@@ -43,12 +43,12 @@ public class PreliminaryDataDTO {
         this.longitude = longitude;
     }
 
-    public String getClientIP() {
-        return clientIP;
+    public String getClientIp() {
+        return clientIp;
     }
 
-    public void setClientIP(String clientIP) {
-        this.clientIP = clientIP;
+    public void setClientIp(String clientIP) {
+        this.clientIp = clientIP;
     }
 
     public String getAvgMonthlyEnergyBill() {
@@ -65,7 +65,7 @@ public class PreliminaryDataDTO {
                 "address='" + address + '\'' +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
-                ", clientIP='" + clientIP + '\'' +
+                ", clientIp='" + clientIp + '\'' +
                 ", avgMonthlyEnergyBill='" + avgMonthlyEnergyBill + '\'' +
                 '}';
     }
