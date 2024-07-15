@@ -8,7 +8,7 @@ public class SolarBuildingInsightLog {
 
     public static void parsingError(GeocodedLocation location, JsonProcessingException ex, Logger logger) {
         logger.error("Error parsing building insight response. Location: {}, {} Message: {}",
-                location.getLatitude(), location.getLongitude(), ex.getMessage());
+                location.latitude(), location.longitude(), ex.getMessage());
     }
 
 }
