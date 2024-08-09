@@ -1,5 +1,7 @@
 package com.solar_insight.app;
 
+import com.solar_insight.app.solar.SolarBuildingInsightService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,14 +14,17 @@ public class SolarInsightApplication {
 		SpringApplication.run(SolarInsightApplication.class, args);
 	}
 
-	/*
+	@Autowired
+	private SolarBuildingInsightService solarBuildingInsightService;
+
+
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
-
+			solarBuildingInsightService.solarCostCalculator();
 		};
 	}
-	 */
+
 
 
 }
