@@ -34,10 +34,10 @@ public class SolarInsightApplication {
 		return (args) -> {
 
 			ObjectMapper objectMapper = new ObjectMapper();
-			JsonNode response = objectMapper.readTree(new File("C:\\Users\\Seany\\Desktop\\solar_payload.txt"));
-			response = response.get(0);
+			JsonNode response = objectMapper.readTree(new File("C:\\Users\\lipsa\\OneDrive\\Desktop\\solar-api-response.json"));
+			//response = response.get(0);
 
-			double pricePerKwh = calculateCurrentPricePerKWh(29096, 4047.7117, 94.06412);
+			double pricePerKwh = calculateCurrentPricePerKWh(59141, 9256.011, 99.75386);
 			System.out.println("Price Pre Kwh: " + pricePerKwh);
 
 			JsonNode solarPanelConfig = null;
