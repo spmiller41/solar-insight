@@ -17,6 +17,7 @@ public class SolarCostCalculator {
     private final double energyCostPerKwh;
     private final int panelCount;
     private final double yearlyEnergyDcKwh;
+    private final double interestRate;
 
     // Calculated Metrics
     private double yearlyProductionAcKwh;
@@ -28,13 +29,14 @@ public class SolarCostCalculator {
 
     public SolarCostCalculator(int monthlyAverageEnergyBill, double energyCostPerKwh, int panelCount, double yearlyEnergyDcKwh) {
         // Store Predefined Config
-        this.dcToAcEfficiency = 0.85;
+        this.dcToAcEfficiency = 0.97;
         this.efficiencyDepreciationFactor = 0.995;
         this.costIncreaseFactor = 1.022;
-        this.discountRate = 1.04;
+        this.discountRate = 1;
         this.panelCapacityWatts = 400;
-        this.installationCostPerWatt = 4.0;
-        this.installationLifeSpan = 25;
+        this.installationCostPerWatt = 2.7;
+        this.installationLifeSpan = 20;
+        this.interestRate = .0599;
 
         // Store Parameters
         this.energyCostPerKwh = energyCostPerKwh;
@@ -72,6 +74,7 @@ public class SolarCostCalculator {
     private void calculateAndStoreData() {
         double installationSizeKw = (panelCount * panelCapacityWatts) / 1000.0;
         double installationCostTotal = installationCostPerWatt * installationSizeKw * 1000;
+        installationCostTotal = (interestRate * installationCostTotal) + installationCostTotal;
 
         List<Double> yearlyUtilityBillEstimates = calculateYearlyUtilityBillEstimates();
         double remainingLifetimeUtilityBill = yearlyUtilityBillEstimates.stream().mapToDouble(Double::doubleValue).sum();
