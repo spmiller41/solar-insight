@@ -3,6 +3,7 @@ package com.solar_insight.app;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.solar.SolarBuildingInsightService;
+import com.solar_insight.app.solar.SolarCostCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -12,6 +13,7 @@ import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
@@ -31,8 +33,38 @@ public class SolarInsightApplication {
 	public CommandLineRunner demo() {
 		return (args) -> {
 
+			ObjectMapper objectMapper = new ObjectMapper();
+			JsonNode response = objectMapper.readTree(new File("C:\\Users\\Seany\\Desktop\\solar_payload.txt"));
+			response = response.get(0);
+
 			double pricePerKwh = calculateCurrentPricePerKWh(29096, 4047.7117, 94.06412);
 			System.out.println("Price Pre Kwh: " + pricePerKwh);
+
+			JsonNode solarPanelConfig = null;
+			try {
+				solarPanelConfig = response.path("solarPotential").path("solarPanelConfigs");
+			} catch (Exception ex) {
+				System.out.println(ex.getMessage());
+			}
+
+			if (solarPanelConfig != null) {
+				for (JsonNode config : solarPanelConfig) {
+					int panelCount = config.path("panelsCount").asInt();
+					double yearlyDcKwh = config.path("yearlyEnergyDcKwh").asDouble();
+					System.out.println("Panel Count: " + panelCount);
+					System.out.println("Yearly Energy DC: " + yearlyDcKwh);
+
+					SolarCostCalculator solarCostCalculator = new SolarCostCalculator(200, pricePerKwh, panelCount, yearlyDcKwh);
+					System.out.println("Savings: " + solarCostCalculator.getSavings());
+					System.out.println("Yearly Production AC: " + solarCostCalculator.getYearlyProductionAcKwh());
+					System.out.println("Total Cost With Solar: " + solarCostCalculator.getTotalCostWithSolar());
+					System.out.println("Total Cost Without Solar: " + solarCostCalculator.getTotalCostWithoutSolar());
+					System.out.println("Incentives: " + solarCostCalculator.getSolarIncentives());
+					System.out.println("Monthly Bill With Solar: " + solarCostCalculator.getMonthlyBillWithSolar());
+					System.out.println("-----------------------");
+				}
+			}
+
 
 		};
 
