@@ -38,7 +38,9 @@ public class SolarInsightApplication {
 			//response = response.get(0);
 
 			double pricePerKwh = calculateCurrentPricePerKWh(59141, 9256.011, 99.75386);
+			double annualConsumption = (200 / pricePerKwh) * 12;
 			System.out.println("Price Pre Kwh: " + pricePerKwh);
+			System.out.println("Annual Consumption: " + annualConsumption);
 
 			JsonNode solarPanelConfig = null;
 			try {
@@ -60,7 +62,7 @@ public class SolarInsightApplication {
 					System.out.println("Total Cost With Solar: " + solarCostCalculator.getTotalCostWithSolar());
 					System.out.println("Total Cost Without Solar: " + solarCostCalculator.getTotalCostWithoutSolar());
 					System.out.println("Incentives: " + solarCostCalculator.getSolarIncentives());
-					System.out.println("Monthly Bill With Solar: " + solarCostCalculator.getMonthlyBillWithSolar());
+					System.out.println("Monthly Energy Cost With Solar: " + solarCostCalculator.getMonthlyBillWithSolar());
 					System.out.println("-----------------------");
 				}
 			}
