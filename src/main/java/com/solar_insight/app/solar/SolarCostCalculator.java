@@ -9,7 +9,6 @@ public class SolarCostCalculator {
     private final double dcToAcEfficiency;
     private final double efficiencyDepreciationFactor;
     private final double costIncreaseFactor;
-    private final double discountRate;
     private final double monthlyAverageEnergyBill;
     private final double panelCapacityWatts;
     private final double installationCostPerWatt;
@@ -32,9 +31,8 @@ public class SolarCostCalculator {
         this.dcToAcEfficiency = 0.97;
         this.efficiencyDepreciationFactor = 0.995;
         this.costIncreaseFactor = 1.022;
-        this.discountRate = 1;
         this.panelCapacityWatts = 400;
-        this.installationCostPerWatt = 2.7;
+        this.installationCostPerWatt = 4.0;
         this.installationLifeSpan = 20;
         this.interestRate = .0599;
 
@@ -76,6 +74,7 @@ public class SolarCostCalculator {
         double installationCostTotal = installationCostPerWatt * installationSizeKw * 1000;
         installationCostTotal = (interestRate * installationCostTotal) + installationCostTotal;
 
+
         List<Double> yearlyUtilityBillEstimates = calculateYearlyUtilityBillEstimates();
         double remainingLifetimeUtilityBill = yearlyUtilityBillEstimates.stream().mapToDouble(Double::doubleValue).sum();
 
@@ -98,7 +97,7 @@ public class SolarCostCalculator {
     private List<Double> calculateYearlyCostWithoutSolar() {
         List<Double> yearlyCostWithoutSolar = new ArrayList<>();
         for (int year = 0; year < installationLifeSpan; year++) {
-            double costWithoutSolar = (monthlyAverageEnergyBill * 12 * Math.pow(costIncreaseFactor, year)) / Math.pow(discountRate, year);
+            double costWithoutSolar = (monthlyAverageEnergyBill * 12 * Math.pow(costIncreaseFactor, year));
             yearlyCostWithoutSolar.add(costWithoutSolar);
         }
         return yearlyCostWithoutSolar;
@@ -130,7 +129,7 @@ public class SolarCostCalculator {
 
     /*
      * Estimates the utility bill for each year by subtracting solar energy production from consumption,
-     * then calculating the cost based on energy prices adjusted for inflation and discount rates.
+     * then calculating the cost based on energy prices adjusted for inflation.
      *
      * @param yearlyProductionAcKwh List of yearly AC energy production values over the installation lifespan.
      * @param yearlyKwhEnergyConsumption Annual energy consumption in kWh.
@@ -141,7 +140,7 @@ public class SolarCostCalculator {
         for (int year = 0; year < installationLifeSpan; year++) {
             double yearlyKwhEnergyProduced = yearlyProductionAcKwh.get(year);
             double billEnergyKwh = yearlyKwhEnergyConsumption - yearlyKwhEnergyProduced;
-            double billEstimate = (billEnergyKwh * energyCostPerKwh * Math.pow(costIncreaseFactor, year)) / Math.pow(discountRate, year);
+            double billEstimate = (billEnergyKwh * energyCostPerKwh * Math.pow(costIncreaseFactor, year));
             yearlyUtilityBillEstimates.add(Math.max(billEstimate, 0));
         }
         return yearlyUtilityBillEstimates;
