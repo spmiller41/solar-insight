@@ -34,7 +34,7 @@ public class SolarInsightApplication {
 		return (args) -> {
 
 			ObjectMapper objectMapper = new ObjectMapper();
-			JsonNode response = objectMapper.readTree(new File("C:\\Users\\Sean\\Dev-Projects\\solar_payload.txt"));
+			JsonNode response = objectMapper.readTree(new File("C:\\Users\\Seany\\Desktop\\solar_payload.txt"));
 			response = response.get(0);
 
 			double pricePerKwh = calculateCurrentPricePerKWh(29096, 4047.7117, 94.06412);
