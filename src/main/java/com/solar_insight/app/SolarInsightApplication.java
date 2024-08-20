@@ -2,22 +2,17 @@ package com.solar_insight.app;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solar_insight.app.solar.SolarBuildingInsightService;
 import com.solar_insight.app.solar.SolarCostCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 @SpringBootApplication
 public class SolarInsightApplication {
@@ -34,7 +29,7 @@ public class SolarInsightApplication {
 		return (args) -> {
 
 			ObjectMapper objectMapper = new ObjectMapper();
-			JsonNode response = objectMapper.readTree(new File("C:\\Users\\Seany\\Desktop\\solar_payload.txt"));
+			JsonNode response = objectMapper.readTree(new File("C:\\Users\\Sean\\Dev-Projects\\solar_payload.txt"));
 			response = response.get(0);
 
 			double pricePerKwh = calculateCurrentPricePerKWh(29096, 4047.7117, 94.06412);

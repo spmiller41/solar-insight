@@ -28,13 +28,13 @@ public class SolarCostCalculator {
 
     public SolarCostCalculator(int monthlyAverageEnergyBill, double energyCostPerKwh, int panelCount, double yearlyEnergyDcKwh) {
         // Store Predefined Config
-        this.dcToAcEfficiency = 0.97;
-        this.efficiencyDepreciationFactor = 0.995;
-        this.costIncreaseFactor = 1.022;
-        this.panelCapacityWatts = 400;
-        this.installationCostPerWatt = 4.0;
-        this.installationLifeSpan = 20;
-        this.interestRate = .0599;
+        this.dcToAcEfficiency = SolarConfig.DC_TO_AC_EFFICIENCY;
+        this.efficiencyDepreciationFactor = SolarConfig.EFFICIENCY_DEPRECIATION_FACTOR;
+        this.costIncreaseFactor = SolarConfig.COST_INCREASE_FACTOR;
+        this.panelCapacityWatts = SolarConfig.PANEL_CAPACITY_WATTS;
+        this.installationCostPerWatt = SolarConfig.INSTALLATION_COST_PER_WATT;
+        this.installationLifeSpan = SolarConfig.INSTALLATION_LIFE_SPAN;
+        this.interestRate = SolarConfig.INTEREST_RATE;
 
         // Store Parameters
         this.energyCostPerKwh = energyCostPerKwh;
