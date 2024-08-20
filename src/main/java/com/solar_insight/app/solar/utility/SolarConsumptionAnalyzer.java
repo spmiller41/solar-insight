@@ -1,4 +1,4 @@
-package com.solar_insight.app.solar;
+package com.solar_insight.app.solar.utility;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

@@ -1,4 +1,4 @@
-package com.solar_insight.app.solar;
+package com.solar_insight.app.solar.utility;
 
 import java.util.ArrayList;
 import java.util.List;

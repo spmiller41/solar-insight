@@ -2,7 +2,7 @@ package com.solar_insight.app;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solar_insight.app.solar.SolarCostCalculator;
+import com.solar_insight.app.solar.service.SolarBuildingInsightService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -11,8 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @SpringBootApplication
 public class SolarInsightApplication {
@@ -24,73 +22,27 @@ public class SolarInsightApplication {
 	@Autowired
 	private RestTemplate restTemplate;
 
+	@Autowired
+	private SolarBuildingInsightService buildingInsightService;
+
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
 
+			// GeocodedLocation location = new GeocodedLocation(40.75880146718224, -72.85091345762694);
+			// JsonNode response = buildingInsightService.getSolarData(location);
+			// System.out.println(response);
+
 			ObjectMapper objectMapper = new ObjectMapper();
-			JsonNode response = objectMapper.readTree(new File("C:\\Users\\Sean\\Dev-Projects\\solar_payload.txt"));
-			response = response.get(0);
+			JsonNode response = objectMapper.readTree(new File("C:\\Users\\lipsa\\OneDrive\\Desktop\\solar-api-response.json"));
+			System.out.println(response);
 
-			double pricePerKwh = calculateCurrentPricePerKWh(29096, 4047.7117, 94.06412);
-			System.out.println("Price Pre Kwh: " + pricePerKwh);
 
-			JsonNode solarPanelConfig = null;
-			try {
-				solarPanelConfig = response.path("solarPotential").path("solarPanelConfigs");
-			} catch (Exception ex) {
-				System.out.println(ex.getMessage());
-			}
-
-			if (solarPanelConfig != null) {
-				for (JsonNode config : solarPanelConfig) {
-					int panelCount = config.path("panelsCount").asInt();
-					double yearlyDcKwh = config.path("yearlyEnergyDcKwh").asDouble();
-					System.out.println("Panel Count: " + panelCount);
-					System.out.println("Yearly Energy DC: " + yearlyDcKwh);
-
-					SolarCostCalculator solarCostCalculator = new SolarCostCalculator(200, pricePerKwh, panelCount, yearlyDcKwh);
-					System.out.println("Savings: " + solarCostCalculator.getSavings());
-					System.out.println("Yearly Production AC: " + solarCostCalculator.getYearlyProductionAcKwh());
-					System.out.println("Total Cost With Solar: " + solarCostCalculator.getTotalCostWithSolar());
-					System.out.println("Total Cost Without Solar: " + solarCostCalculator.getTotalCostWithoutSolar());
-					System.out.println("Incentives: " + solarCostCalculator.getSolarIncentives());
-					System.out.println("Monthly Bill With Solar: " + solarCostCalculator.getMonthlyBillWithSolar());
-					System.out.println("-----------------------");
-				}
-			}
 
 
 		};
 
 	}
-
-	public double calculateCurrentPricePerKWh(double costOfElectricityWithoutSolar,
-											  double initialAcKwhPerYear, double solarPercentage) {
-		// Constants
-		final double INFLATION_RATE = 0.022; // 2.2%
-		final int YEARS = 20; // 20 years
-
-		// Calculate the total annual consumption without solar
-		double totalEnergyConsumptionKWh = initialAcKwhPerYear / (solarPercentage / 100.0);
-		System.out.println("totalEnergyConsumptionKWh: " + totalEnergyConsumptionKWh);
-
-		// Calculate the Present Value of the total cost by reversing inflation
-		double presentValueTotalCost = costOfElectricityWithoutSolar / Math.pow(1 + INFLATION_RATE, YEARS);
-		System.out.println("presentValueTotalCost: " + presentValueTotalCost);
-
-		// Total energy consumption over the specified number of years
-		double totalEnergyConsumptionOverYears = totalEnergyConsumptionKWh * YEARS;
-		System.out.println("totalEnergyConsumptionOverYears: " + totalEnergyConsumptionOverYears);
-
-		// Current price per kWh
-		return new BigDecimal(presentValueTotalCost / totalEnergyConsumptionOverYears)
-				.setScale(3, RoundingMode.HALF_UP)
-				.doubleValue();
-	}
-
-
-
 
 }
 

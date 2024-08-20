@@ -1,4 +1,4 @@
-package com.solar_insight.app.solar;
+package com.solar_insight.app;
 
 public record GeocodedLocation(double latitude, double longitude) {
 

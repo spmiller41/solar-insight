@@ -1,9 +1,8 @@
 package com.solar_insight.app.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.solar_insight.app.solar.GeocodedLocation;
-import com.solar_insight.app.solar.SolarBuildingInsightService;
-import org.apache.coyote.Response;
+import com.solar_insight.app.GeocodedLocation;
+import com.solar_insight.app.solar.service.SolarBuildingInsightService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

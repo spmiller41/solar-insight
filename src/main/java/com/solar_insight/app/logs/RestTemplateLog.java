@@ -1,6 +1,6 @@
 package com.solar_insight.app.logs;
 
-import com.solar_insight.app.solar.SolarBuildingInsightService;
+import com.solar_insight.app.solar.service.SolarBuildingInsightService;
 import org.slf4j.Logger;
 
 public class RestTemplateLog {
