@@ -147,4 +147,17 @@ public class SolarCostCalculator {
     }
 
 
+    @Override
+    public String toString() {
+        return "SolarCostCalculator{" +
+                "yearlyProductionAcKwh=" + yearlyProductionAcKwh +
+                ", totalCostWithSolar=" + totalCostWithSolar +
+                ", totalCostWithoutSolar=" + totalCostWithoutSolar +
+                ", solarIncentives=" + solarIncentives +
+                ", savings=" + savings +
+                ", monthlyBillWithSolar=" + monthlyBillWithSolar +
+                '}';
+    }
+
+
 }
