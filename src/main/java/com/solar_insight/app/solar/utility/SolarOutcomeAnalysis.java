@@ -3,7 +3,7 @@ package com.solar_insight.app.solar.utility;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SolarCostCalculator {
+public class SolarOutcomeAnalysis {
 
     // Config
     private final double dcToAcEfficiency;
@@ -25,8 +25,9 @@ public class SolarCostCalculator {
     private double solarIncentives;
     private double savings;
     private int monthlyBillWithSolar;
+    private int yearlyDcSystemSize;
 
-    public SolarCostCalculator(int monthlyAverageEnergyBill, double energyCostPerKwh, int panelCount, double yearlyEnergyDcKwh) {
+    public SolarOutcomeAnalysis(int monthlyAverageEnergyBill, double energyCostPerKwh, int panelCount, double yearlyEnergyDcKwh) {
         // Store Predefined Config
         this.dcToAcEfficiency = SolarConfig.DC_TO_AC_EFFICIENCY;
         this.efficiencyDepreciationFactor = SolarConfig.EFFICIENCY_DEPRECIATION_FACTOR;
@@ -44,6 +45,7 @@ public class SolarCostCalculator {
 
         // Set Data
         calculateAndStoreData();
+        this.yearlyDcSystemSize = (int) (panelCount * panelCapacityWatts);
     }
 
     public double getYearlyProductionAcKwh() { return yearlyProductionAcKwh; }
@@ -58,6 +60,9 @@ public class SolarCostCalculator {
 
     public double getSolarIncentives() { return solarIncentives; }
 
+    public int getPanelCount() { return panelCount; }
+
+    public int getYearlyDcSystemSize() { return yearlyDcSystemSize; }
 
     /*
      * Calculates and stores the key financial metrics related to solar installation:
@@ -149,13 +154,15 @@ public class SolarCostCalculator {
 
     @Override
     public String toString() {
-        return "SolarCostCalculator{" +
+        return "SolarOutcomeAnalysis{" +
                 "yearlyProductionAcKwh=" + yearlyProductionAcKwh +
                 ", totalCostWithSolar=" + totalCostWithSolar +
                 ", totalCostWithoutSolar=" + totalCostWithoutSolar +
                 ", solarIncentives=" + solarIncentives +
                 ", savings=" + savings +
                 ", monthlyBillWithSolar=" + monthlyBillWithSolar +
+                ", yearlyDcSystemSize=" + yearlyDcSystemSize +
+                ", panelCount=" + panelCount +
                 '}';
     }
 
