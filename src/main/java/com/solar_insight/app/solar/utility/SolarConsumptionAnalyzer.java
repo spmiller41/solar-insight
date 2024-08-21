@@ -5,16 +5,22 @@ import java.math.RoundingMode;
 
 public class SolarConsumptionAnalyzer {
 
+    private final double costOfElectricityWithoutSolar;
+    private final double initialAcKwhPerYear;
+    private final double solarPercentage;
     private final double pricePerKwh;
     private int annualAcKwhNeeded;
 
-    public SolarConsumptionAnalyzer(double costOfElectricityWithoutSolar, double initialAcKwhPerYear, double solarPercentage) {
-        this.pricePerKwh = calculateCurrentPricePerKWh(
-                costOfElectricityWithoutSolar, initialAcKwhPerYear, solarPercentage);
+    public SolarConsumptionAnalyzer(int monthlyBill, double costOfElectricityWithoutSolar,
+                                    double initialAcKwhPerYear, double solarPercentage) {
+        this.costOfElectricityWithoutSolar = costOfElectricityWithoutSolar;
+        this.initialAcKwhPerYear = initialAcKwhPerYear;
+        this.solarPercentage = solarPercentage;
+        this.pricePerKwh = calculateCurrentPricePerKWh();
+        this.annualAcKwhNeeded = calculateAnnualAcKwhNeeded(monthlyBill);
     }
 
-    private double calculateCurrentPricePerKWh(double costOfElectricityWithoutSolar,
-                                               double initialAcKwhPerYear, double solarPercentage) {
+    private double calculateCurrentPricePerKWh() {
         // Constants - Based on Google Solar calculations.
         final double COST_INCREASE_FACTOR = 0.022; // 2.2%
         final int YEARS = 20; // 20 years
@@ -34,8 +40,8 @@ public class SolarConsumptionAnalyzer {
                 .doubleValue();
     }
 
-    public void setAnnualAcKwhNeeded(int monthlyBill) {
-        this.annualAcKwhNeeded = (int) ((monthlyBill * 12) / pricePerKwh);
+    private int calculateAnnualAcKwhNeeded(int monthlyBill) {
+        return annualAcKwhNeeded = (int) ((monthlyBill * 12) / pricePerKwh);
     }
 
     public int getAnnualAcKwhNeeded() {
