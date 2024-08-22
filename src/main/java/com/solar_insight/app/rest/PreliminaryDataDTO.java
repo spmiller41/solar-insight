@@ -17,7 +17,7 @@ public class PreliminaryDataDTO {
     private String clientIp;
 
     @JsonProperty("avgMonthlyEnergyBill")
-    private String avgMonthlyEnergyBill;
+    private int avgMonthlyEnergyBill;
 
     public String getAddress() {
         return address;
@@ -51,11 +51,11 @@ public class PreliminaryDataDTO {
         this.clientIp = clientIP;
     }
 
-    public String getAvgMonthlyEnergyBill() {
+    public int getAvgMonthlyEnergyBill() {
         return avgMonthlyEnergyBill;
     }
 
-    public void setAvgMonthlyEnergyBill(String avgMonthlyEnergyBill) {
+    public void setAvgMonthlyEnergyBill(int avgMonthlyEnergyBill) {
         this.avgMonthlyEnergyBill = avgMonthlyEnergyBill;
     }
 
