@@ -28,6 +28,7 @@ public class SolarInsightApplication {
 	public CommandLineRunner demo() {
 		return (args) -> {
 
+			/*
 			GeocodedLocation location = new GeocodedLocation(40.75880146718224, -72.85091345762694);
 			JsonNode response = buildingInsightService.getSolarData(location);
 			// System.out.println(response);
@@ -39,6 +40,8 @@ public class SolarInsightApplication {
 			SolarConsumptionAnalyzer consumptionAnalysis = buildingInsightService.parseConsumptionAnalysis(response, AVERAGE_MONTHLY_UB);
 			SolarOutcomeAnalysis solarOutcome = buildingInsightService.idealSolarAnalysis(response, consumptionAnalysis, AVERAGE_MONTHLY_UB);
 			System.out.println(solarOutcome);
+			 */
+
 		};
 
 	}
