@@ -22,10 +22,10 @@ public class SolarOutcomeAnalysis {
     private double yearlyProductionAcKwh;
     private double totalCostWithSolar;
     private double totalCostWithoutSolar;
-    private double solarIncentives;
-    private double savings;
+    private int solarIncentives;
+    private int savings;
     private int monthlyBillWithSolar;
-    private int yearlyDcSystemSize;
+    private final int yearlyDcSystemSize;
 
     public SolarOutcomeAnalysis(int monthlyAverageEnergyBill, double energyCostPerKwh, int panelCount, double yearlyEnergyDcKwh) {
         // Store Predefined Config
@@ -54,11 +54,11 @@ public class SolarOutcomeAnalysis {
 
     public double getTotalCostWithoutSolar() { return totalCostWithoutSolar; }
 
-    public double getSavings() { return savings; }
+    public int getSavings() { return savings; }
 
     public int getMonthlyBillWithSolar() { return monthlyBillWithSolar; }
 
-    public double getSolarIncentives() { return solarIncentives; }
+    public int getSolarIncentives() { return solarIncentives; }
 
     public int getPanelCount() { return panelCount; }
 
@@ -85,10 +85,10 @@ public class SolarOutcomeAnalysis {
 
         List<Double> yearlyCostWithoutSolar = calculateYearlyCostWithoutSolar();
 
-        this.solarIncentives = installationCostTotal * .30;
+        this.solarIncentives = (int) (installationCostTotal * .30);
         this.totalCostWithSolar = installationCostTotal + remainingLifetimeUtilityBill - solarIncentives;
         this.totalCostWithoutSolar = yearlyCostWithoutSolar.stream().mapToDouble(Double::doubleValue).sum();
-        this.savings = totalCostWithoutSolar - totalCostWithSolar + solarIncentives;
+        this.savings = (int) (totalCostWithoutSolar - totalCostWithSolar + solarIncentives);
         this.monthlyBillWithSolar = (int) (totalCostWithSolar / (12 * installationLifeSpan));
         this.yearlyProductionAcKwh = yearlyEnergyDcKwh * dcToAcEfficiency;
     }
