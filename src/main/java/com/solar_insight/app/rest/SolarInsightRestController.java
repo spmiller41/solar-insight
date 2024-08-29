@@ -7,20 +7,18 @@ import com.solar_insight.app.solar.service.SolarBuildingInsightService;
 import com.solar_insight.app.solar.utility.SolarConsumptionAnalyzer;
 import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.NumberFormat;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
 public class SolarInsightRestController {
+
+    @Value("${google.maps.api.key}")
+    private String googleMapsApiKey;
 
     private final SolarBuildingInsightService solarBuildingInsightService;
 
@@ -32,6 +30,16 @@ public class SolarInsightRestController {
         this.imageService = imageService;
     }
 
+    /**
+     * This controller method handles the submission of preliminary data from the frontend.
+     * It processes the provided geolocation and energy data to perform a solar analysis.
+     * The method then generates a unique session UUID (userSessionUUID) to track the user's session.
+     * The analysis results, along with the generated UUID, are returned in the response.
+     *
+     * @param preliminaryDataDTO - The DTO containing the preliminary data such as latitude, longitude, and average monthly energy bill.
+     * @return A map containing the solar analysis results, including estimated savings, system size,
+     *         monthly payment, incentives, panel count, satellite imagery, and the generated session UUID.
+     */
     @PostMapping("/preliminary_data")
     public Map<String, String> preliminaryDataController(@RequestBody PreliminaryDataDTO preliminaryDataDTO) {
         System.out.println(preliminaryDataDTO);
@@ -53,6 +61,8 @@ public class SolarInsightRestController {
         byte[] imageBytes = imageService.getSatelliteImage(geocodedLocation);
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
+        String userSessionUUID = UUID.randomUUID().toString();
+
         NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
         Map<String, String> response = new HashMap<>();
         response.put("estimatedSavings", numberFormat.format(solarOutcome.getSavings()));
@@ -61,6 +71,7 @@ public class SolarInsightRestController {
         response.put("incentives", numberFormat.format(solarOutcome.getSolarIncentives()));
         response.put("panelCount", String.valueOf(solarOutcome.getPanelCount()));
         response.put("imagery", base64Image);
+        response.put("uuid", userSessionUUID);
 
         return response;
     }
