@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PreliminaryDataDTO {
 
-    @JsonProperty("address")
-    private String address;
-
     @JsonProperty("latitude")
     private double latitude;
 
@@ -19,54 +16,61 @@ public class PreliminaryDataDTO {
     @JsonProperty("avgMonthlyEnergyBill")
     private int avgMonthlyEnergyBill;
 
-    public String getAddress() {
-        return address;
-    }
+    @JsonProperty("street")
+    private String street;
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+    @JsonProperty("city")
+    private String city;
 
-    public double getLatitude() {
-        return latitude;
-    }
+    @JsonProperty("state")
+    private String state;
 
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
+    @JsonProperty("zip")
+    private String zip;
 
-    public double getLongitude() {
-        return longitude;
-    }
+    public String getStreet() { return street; }
 
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
+    public void setStreet(String street) { this.street = street; }
 
-    public String getClientIp() {
-        return clientIp;
-    }
+    public String getCity() { return city; }
 
-    public void setClientIp(String clientIP) {
-        this.clientIp = clientIP;
-    }
+    public void setCity(String city) { this.city = city; }
 
-    public int getAvgMonthlyEnergyBill() {
-        return avgMonthlyEnergyBill;
-    }
+    public String getState() { return state; }
 
-    public void setAvgMonthlyEnergyBill(int avgMonthlyEnergyBill) {
-        this.avgMonthlyEnergyBill = avgMonthlyEnergyBill;
-    }
+    public void setState(String state) { this.state = state; }
+
+    public String getZip() { return zip; }
+
+    public void setZip(String zip) { this.zip = zip; }
+
+    public double getLatitude() { return latitude; }
+
+    public void setLatitude(double latitude) { this.latitude = latitude; }
+
+    public double getLongitude() { return longitude; }
+
+    public void setLongitude(double longitude) { this.longitude = longitude; }
+
+    public String getClientIp() { return clientIp; }
+
+    public void setClientIp(String clientIP) { this.clientIp = clientIP; }
+
+    public int getAvgMonthlyEnergyBill() { return avgMonthlyEnergyBill; }
+
+    public void setAvgMonthlyEnergyBill(int avgMonthlyEnergyBill) { this.avgMonthlyEnergyBill = avgMonthlyEnergyBill; }
 
     @Override
     public String toString() {
         return "PreliminaryDataDTO{" +
-                "address='" + address + '\'' +
-                ", latitude=" + latitude +
+                "latitude=" + latitude +
                 ", longitude=" + longitude +
                 ", clientIp='" + clientIp + '\'' +
-                ", avgMonthlyEnergyBill='" + avgMonthlyEnergyBill + '\'' +
+                ", avgMonthlyEnergyBill=" + avgMonthlyEnergyBill +
+                ", street='" + street + '\'' +
+                ", city='" + city + '\'' +
+                ", state='" + state + '\'' +
+                ", zip='" + zip + '\'' +
                 '}';
     }
 
