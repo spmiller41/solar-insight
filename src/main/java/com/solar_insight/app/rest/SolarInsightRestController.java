@@ -30,6 +30,12 @@ public class SolarInsightRestController {
         this.imageService = imageService;
     }
 
+    // Health Check Endpoint
+    @GetMapping("/status")
+    public String status() {
+        return "Solar Insight server is running...";
+    }
+
     /**
      * This controller method handles the submission of preliminary data from the frontend.
      * It processes the provided geolocation and energy data to perform a solar analysis.
