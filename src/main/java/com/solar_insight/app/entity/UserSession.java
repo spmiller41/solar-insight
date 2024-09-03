@@ -1,0 +1,71 @@
+package com.solar_insight.app.entity;
+
+import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name="user_sessions")
+public class UserSession {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private int id;
+
+    @Column(name = "uuid")
+    private String sessionUUID;
+
+    @Column(name = "ip_address")
+    private String ipAddress;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "address_id")
+    private int addressId;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getSessionUUID() {
+        return sessionUUID;
+    }
+
+    public void setSessionUUID(String sessionUUID) {
+        this.sessionUUID = sessionUUID;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @Override
+    public String toString() {
+        return "UserSession{" +
+                "id=" + id +
+                ", sessionUUID='" + sessionUUID + '\'' +
+                ", ipAddress='" + ipAddress + '\'' +
+                ", createdAt=" + createdAt +
+                ", addressId=" + addressId +
+                '}';
+    }
+
+}

@@ -1,4 +1,4 @@
-package com.solar_insight.app.rest;
+package com.solar_insight.app.rest.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
