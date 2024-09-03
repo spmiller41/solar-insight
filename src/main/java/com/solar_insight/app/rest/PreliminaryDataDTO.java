@@ -19,6 +19,9 @@ public class PreliminaryDataDTO {
     @JsonProperty("street")
     private String street;
 
+    @JsonProperty("unit")
+    private String unit;
+
     @JsonProperty("city")
     private String city;
 
@@ -31,6 +34,10 @@ public class PreliminaryDataDTO {
     public String getStreet() { return street; }
 
     public void setStreet(String street) { this.street = street; }
+
+    public String getUnit() { return unit; }
+
+    public void setUnit(String unit) { this.unit = unit; }
 
     public String getCity() { return city; }
 
@@ -68,6 +75,7 @@ public class PreliminaryDataDTO {
                 ", clientIp='" + clientIp + '\'' +
                 ", avgMonthlyEnergyBill=" + avgMonthlyEnergyBill +
                 ", street='" + street + '\'' +
+                ", unit='" + unit + '\'' +
                 ", city='" + city + '\'' +
                 ", state='" + state + '\'' +
                 ", zip='" + zip + '\'' +
