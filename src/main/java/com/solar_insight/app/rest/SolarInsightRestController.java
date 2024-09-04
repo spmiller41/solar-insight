@@ -2,7 +2,7 @@ package com.solar_insight.app.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.GeocodedLocation;
-import com.solar_insight.app.rest.dto.PreliminaryDataDTO;
+import com.solar_insight.app.dto.PreliminaryDataDTO;
 import com.solar_insight.app.solar.service.SatelliteImageService;
 import com.solar_insight.app.solar.service.SolarBuildingInsightService;
 import com.solar_insight.app.solar.utility.SolarConsumptionAnalyzer;

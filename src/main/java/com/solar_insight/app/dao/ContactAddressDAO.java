@@ -18,9 +18,8 @@ public class ContactAddressDAO {
         this.entityManager = entityManager;
     }
 
-    public int insert(ContactAddress contactAddress) {
+    public void insert(ContactAddress contactAddress) {
         entityManager.persist(contactAddress);
-        return contactAddress.getId();
     }
 
     public Optional<ContactAddress> findByAddressAndContact(int addressId, int contactId) {

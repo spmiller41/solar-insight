@@ -9,7 +9,7 @@ public class SolarOutcomeAnalysis {
     private final double dcToAcEfficiency;
     private final double efficiencyDepreciationFactor;
     private final double costIncreaseFactor;
-    private final double monthlyAverageEnergyBill;
+    private final int monthlyAverageEnergyBill;
     private final double panelCapacityWatts;
     private final double installationCostPerWatt;
     private final int installationLifeSpan;
@@ -63,6 +63,8 @@ public class SolarOutcomeAnalysis {
     public int getPanelCount() { return panelCount; }
 
     public int getYearlyDcSystemSize() { return yearlyDcSystemSize; }
+
+    public int getMonthlyAverageEnergyBill() { return monthlyAverageEnergyBill; }
 
     /*
      * Calculates and stores the key financial metrics related to solar installation:

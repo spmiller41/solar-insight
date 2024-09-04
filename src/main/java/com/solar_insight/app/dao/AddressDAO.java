@@ -1,7 +1,7 @@
 package com.solar_insight.app.dao;
 
 import com.solar_insight.app.entity.Address;
-import com.solar_insight.app.rest.dto.PreliminaryDataDTO;
+import com.solar_insight.app.dto.PreliminaryDataDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +19,7 @@ public class AddressDAO {
         this.entityManager = entityManager;
     }
 
-    public int insert(Address address) {
-        entityManager.persist(address);
-        return address.getId();
-    }
+    public void insert(Address address) { entityManager.persist(address); }
 
     public Optional<Address> findByCoordinatesOrAddress(PreliminaryDataDTO data) {
         String query = "SELECT a FROM Address a WHERE " +
@@ -38,6 +35,18 @@ public class AddressDAO {
                     .setParameter("city", data.getCity())
                     .setParameter("state", data.getState())
                     .setParameter("zip", data.getZip())
+                    .getSingleResult());
+        } catch (NoResultException ex) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Address> findById(int addressId) {
+        String query = "SELECT a FROM Address a WHERE a.id = :addressId";
+
+        try {
+            return Optional.of(entityManager.createQuery(query, Address.class)
+                    .setParameter("addressId", addressId)
                     .getSingleResult());
         } catch (NoResultException ex) {
             return Optional.empty();

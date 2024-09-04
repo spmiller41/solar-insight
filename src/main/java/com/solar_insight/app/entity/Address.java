@@ -1,5 +1,6 @@
 package com.solar_insight.app.entity;
 
+import com.solar_insight.app.dto.PreliminaryDataDTO;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -36,6 +37,17 @@ public class Address {
 
     @Column(name = "created_at")
     private LocalDateTime created_at;
+
+    public Address(PreliminaryDataDTO data) {
+        this.street = data.getStreet();
+        this.unit = data.getUnit();
+        this.city = data.getCity();
+        this.state = data.getState();
+        this.zip = data.getZip();
+        this.latitude = data.getLatitude();
+        this.longitude = data.getLongitude();
+        this.created_at = LocalDateTime.now();
+    }
 
     public int getId() {
         return id;

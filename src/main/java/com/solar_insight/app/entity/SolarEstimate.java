@@ -1,5 +1,6 @@
 package com.solar_insight.app.entity;
 
+import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -45,6 +46,32 @@ public class SolarEstimate {
 
     @Column(name = "address_id")
     private int addressId;
+
+    public SolarEstimate(SolarOutcomeAnalysis solarOutcomeAnalysis, Address address) {
+        this.monthlyBill = solarOutcomeAnalysis.getMonthlyAverageEnergyBill();
+        this.estimatedSavings = solarOutcomeAnalysis.getSavings();
+        this.systemSizeDc = solarOutcomeAnalysis.getYearlyDcSystemSize();
+        this.incentives = solarOutcomeAnalysis.getSolarIncentives();
+        this.panelCount = solarOutcomeAnalysis.getPanelCount();
+        this.annualProductionAc = (int) solarOutcomeAnalysis.getYearlyProductionAcKwh();
+        this.costWithoutSolar = (int) solarOutcomeAnalysis.getTotalCostWithoutSolar();
+        this.costWithSolar = (int) solarOutcomeAnalysis.getTotalCostWithSolar();
+        this.updatedAt = LocalDateTime.now();
+        this.addressId = address.getId();
+    }
+
+    public void refreshSolarEstimate(SolarOutcomeAnalysis solarOutcomeAnalysis) {
+        this.monthlyBill = solarOutcomeAnalysis.getMonthlyAverageEnergyBill();
+        this.estimatedSavings = solarOutcomeAnalysis.getSavings();
+        this.systemSizeDc = solarOutcomeAnalysis.getYearlyDcSystemSize();
+        this.incentives = solarOutcomeAnalysis.getSolarIncentives();
+        this.panelCount = solarOutcomeAnalysis.getPanelCount();
+        this.annualProductionAc = (int) solarOutcomeAnalysis.getYearlyProductionAcKwh();
+        this.costWithoutSolar = (int) solarOutcomeAnalysis.getTotalCostWithoutSolar();
+        this.costWithSolar = (int) solarOutcomeAnalysis.getTotalCostWithSolar();
+        this.updatedAt = LocalDateTime.now();
+        this.totalUpdates++;
+    }
 
     public int getId() {
         return id;

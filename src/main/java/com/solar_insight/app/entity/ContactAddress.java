@@ -17,6 +17,11 @@ public class ContactAddress {
     @Column(name = "contact_id")
     private int contactId;
 
+    public ContactAddress(Contact contact, Address address) {
+        this.contactId = contact.getId();
+        this.addressId = address.getId();
+    }
+
     public int getId() {
         return id;
     }

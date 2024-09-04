@@ -1,6 +1,9 @@
 package com.solar_insight.app.entity;
 
+import com.solar_insight.app.dto.ContactInfoDTO;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name="contacts")
@@ -24,7 +27,15 @@ public class Contact {
     private String phone;
 
     @Column(name = "created_at")
-    private String createdAt;
+    private LocalDateTime createdAt;
+
+    public Contact(ContactInfoDTO contactInfo) {
+        this.firstName = contactInfo.getFirstName();
+        this.lastName = contactInfo.getLastName();
+        this.email = contactInfo.getEmail();
+        this.phone = contactInfo.getPhone();
+        this.createdAt = LocalDateTime.now();
+    }
 
     public int getId() {
         return id;
@@ -66,11 +77,11 @@ public class Contact {
         this.phone = phone;
     }
 
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

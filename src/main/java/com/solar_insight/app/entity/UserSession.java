@@ -1,5 +1,6 @@
 package com.solar_insight.app.entity;
 
+import com.solar_insight.app.dto.PreliminaryDataDTO;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,13 @@ public class UserSession {
 
     @Column(name = "address_id")
     private int addressId;
+
+    public UserSession(PreliminaryDataDTO data, Address address, String sessionUUID) {
+        this.sessionUUID = sessionUUID;
+        this.ipAddress = data.getClientIp();
+        this.createdAt = LocalDateTime.now();
+        this.addressId = address.getId();
+    }
 
     public int getId() {
         return id;
@@ -55,6 +63,14 @@ public class UserSession {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public int getAddressId() {
+        return addressId;
+    }
+
+    public void setAddressId(int addressId) {
+        this.addressId = addressId;
     }
 
     @Override
