@@ -2,6 +2,7 @@ package com.solar_insight.app.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.GeocodedLocation;
+import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
 import com.solar_insight.app.solar.service.SatelliteImageService;
 import com.solar_insight.app.solar.service.SolarBuildingInsightService;
@@ -69,6 +70,7 @@ public class SolarInsightRestController {
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
         String userSessionUUID = UUID.randomUUID().toString();
+        System.out.println("Current Session UUID: " + userSessionUUID);
 
         NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
         Map<String, String> response = new HashMap<>();
@@ -81,6 +83,11 @@ public class SolarInsightRestController {
         response.put("uuid", userSessionUUID);
 
         return response;
+    }
+
+    @PostMapping("/contact_info")
+    public void contactInfoController(@RequestBody ContactInfoDTO contactInfo) {
+        System.out.println(contactInfo);
     }
 
 }
