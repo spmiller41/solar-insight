@@ -16,6 +16,9 @@ public class ContactInfoDTO {
     @JsonProperty("phone")
     private String phone;
 
+    @JsonProperty("sessionUUID")
+    private String sessionUUID;
+
     public String getFirstName() {
         return firstName;
     }
@@ -48,6 +51,10 @@ public class ContactInfoDTO {
         this.phone = phone;
     }
 
+    public String getSessionUUID() { return sessionUUID; }
+
+    public void setSessionUUID(String sessionUUID) { this.sessionUUID = sessionUUID; }
+
     @Override
     public String toString() {
         return "ContactInfoDTO{" +
@@ -55,6 +62,7 @@ public class ContactInfoDTO {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", phone='" + phone + '\'' +
+                ", sessionUUID='" + sessionUUID + '\'' +
                 '}';
     }
 
