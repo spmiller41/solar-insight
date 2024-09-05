@@ -60,6 +60,8 @@ public class SolarEstimate {
         this.addressId = address.getId();
     }
 
+    public SolarEstimate() {}
+
     public void refreshSolarEstimate(SolarOutcomeAnalysis solarOutcomeAnalysis) {
         this.monthlyBill = solarOutcomeAnalysis.getMonthlyAverageEnergyBill();
         this.estimatedSavings = solarOutcomeAnalysis.getSavings();

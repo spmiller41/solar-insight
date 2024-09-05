@@ -37,6 +37,8 @@ public class Contact {
         this.createdAt = LocalDateTime.now();
     }
 
+    public Contact() {}
+
     public int getId() {
         return id;
     }

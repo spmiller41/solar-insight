@@ -33,6 +33,8 @@ public class UserSession {
         this.addressId = address.getId();
     }
 
+    public UserSession() {}
+
     public int getId() {
         return id;
     }

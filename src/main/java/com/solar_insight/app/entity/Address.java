@@ -49,6 +49,8 @@ public class Address {
         this.created_at = LocalDateTime.now();
     }
 
+    public Address() {}
+
     public int getId() {
         return id;
     }

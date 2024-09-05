@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.GeocodedLocation;
 import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
+import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.solar.service.SatelliteImageService;
 import com.solar_insight.app.solar.service.SolarBuildingInsightService;
 import com.solar_insight.app.solar.utility.SolarConsumptionAnalyzer;
@@ -26,10 +27,14 @@ public class SolarInsightRestController {
 
     private final SatelliteImageService imageService;
 
+    private final SessionDataService sessionDataService;
+
     @Autowired
-    public SolarInsightRestController(SolarBuildingInsightService solarBuildingInsightService, SatelliteImageService imageService) {
+    public SolarInsightRestController(SolarBuildingInsightService solarBuildingInsightService,
+                                      SatelliteImageService imageService, SessionDataService sessionDataService) {
         this.solarBuildingInsightService = solarBuildingInsightService;
         this.imageService = imageService;
+        this.sessionDataService = sessionDataService;
     }
 
     // Health Check Endpoint
@@ -82,12 +87,20 @@ public class SolarInsightRestController {
         response.put("imagery", base64Image);
         response.put("uuid", userSessionUUID);
 
+        try {
+            sessionDataService.processUserSessionData(preliminaryDataDTO, solarOutcome, userSessionUUID);
+        } catch (Exception ex) {
+            // Add error logging here
+            System.err.println("Error processing user session: " + ex.getMessage());
+        }
+
         return response;
     }
 
     @PostMapping("/contact_info")
     public void contactInfoController(@RequestBody ContactInfoDTO contactInfo) {
         System.out.println(contactInfo);
+        sessionDataService.processUserSessionData(contactInfo);
     }
 
 }

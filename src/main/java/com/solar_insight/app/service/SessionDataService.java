@@ -99,10 +99,10 @@ public class SessionDataService {
      * Transactional: Rolls back if any operation fails.
      *
      * @param contactInfo  Contact information provided by the user.
-     * @param sessionUUID  Unique ID for the current user session.
      */
     @Transactional
-    public void processUserSessionData(ContactInfoDTO contactInfo, String sessionUUID) {
+    public void processUserSessionData(ContactInfoDTO contactInfo) {
+        String sessionUUID = contactInfo.getSessionUUID();
         Optional<UserSession> optionalUserSession = userSessionDAO.findBySessionUUID(sessionUUID);
         if (optionalUserSession.isEmpty()) {
             // Add error logging here before return

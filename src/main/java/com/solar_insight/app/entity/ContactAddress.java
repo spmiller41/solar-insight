@@ -22,6 +22,8 @@ public class ContactAddress {
         this.addressId = address.getId();
     }
 
+    public ContactAddress() {}
+
     public int getId() {
         return id;
     }
