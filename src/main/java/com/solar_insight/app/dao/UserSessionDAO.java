@@ -21,7 +21,7 @@ public class UserSessionDAO {
     public void insert(UserSession userSession) { entityManager.persist(userSession); }
 
     public Optional<UserSession> findBySessionUUID(String sessionUUID) {
-        String query = "SELECT us UserSession us WHERE us.sessionUUID = :sessionUUID";
+        String query = "SELECT us FROM UserSession us WHERE us.sessionUUID = :sessionUUID\n";
 
         try {
             return Optional.of(entityManager.createQuery(query, UserSession.class)
