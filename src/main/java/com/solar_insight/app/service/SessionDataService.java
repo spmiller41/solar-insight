@@ -61,6 +61,7 @@ public class SessionDataService {
             SolarEstimate solarEstimate = new SolarEstimate(analysis, address);
             solarEstimateDAO.insert(solarEstimate);
             // Add info logging for new solar estimate here
+            // This is a potential trigger for compiling address/estimate and sending it out
         } else {
             Address address = optionalAddress.get();
 
@@ -74,6 +75,7 @@ public class SessionDataService {
                 solarEstimate.refreshSolarEstimate(analysis);
                 solarEstimate = solarEstimateDAO.update(solarEstimate);
                 // Add info logging for solar estimate update here
+                // This is a potential trigger for sending out the updated estimate
             } else {
                 SolarEstimate solarEstimate = new SolarEstimate(analysis, address);
                 solarEstimateDAO.insert(solarEstimate);
