@@ -2,6 +2,8 @@ package com.solar_insight.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.UUID;
+
 public class PreliminaryDataDTO {
 
     @JsonProperty("latitude")
@@ -30,6 +32,9 @@ public class PreliminaryDataDTO {
 
     @JsonProperty("zip")
     private String zip;
+
+    @JsonProperty("sessionUUID")
+    private String sessionUUID;
 
     public String getStreet() { return street; }
 
@@ -67,6 +72,16 @@ public class PreliminaryDataDTO {
 
     public void setAvgMonthlyEnergyBill(int avgMonthlyEnergyBill) { this.avgMonthlyEnergyBill = avgMonthlyEnergyBill; }
 
+    public String getSessionUUID() { return sessionUUID; }
+
+    public void setSessionUUID(String sessionUUID) {
+        if (sessionUUID == null) {
+            this.sessionUUID = UUID.randomUUID().toString();
+        } else {
+            this.sessionUUID = sessionUUID;
+        }
+    }
+
     @Override
     public String toString() {
         return "PreliminaryDataDTO{" +
@@ -79,6 +94,7 @@ public class PreliminaryDataDTO {
                 ", city='" + city + '\'' +
                 ", state='" + state + '\'' +
                 ", zip='" + zip + '\'' +
+                ", sessionUUID='" + sessionUUID + '\'' +
                 '}';
     }
 
