@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.GeocodedLocation;
 import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
+import com.solar_insight.app.dto.UserSessionDTO;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.solar.service.SatelliteImageService;
 import com.solar_insight.app.solar.service.SolarBuildingInsightService;
@@ -74,9 +75,6 @@ public class SolarInsightRestController {
         byte[] imageBytes = imageService.getSatelliteImage(geocodedLocation);
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
-        String userSessionUUID = UUID.randomUUID().toString();
-        System.out.println("Current Session UUID: " + userSessionUUID);
-
         NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
         Map<String, String> response = new HashMap<>();
         response.put("estimatedSavings", numberFormat.format(solarOutcome.getSavings()));
@@ -85,16 +83,28 @@ public class SolarInsightRestController {
         response.put("incentives", numberFormat.format(solarOutcome.getSolarIncentives()));
         response.put("panelCount", String.valueOf(solarOutcome.getPanelCount()));
         response.put("imagery", base64Image);
-        response.put("uuid", userSessionUUID);
+        response.put("uuid", preliminaryDataDTO.getSessionUUID());
 
         try {
-            sessionDataService.processUserSessionData(preliminaryDataDTO, solarOutcome, userSessionUUID);
+            sessionDataService.processUserSessionData(preliminaryDataDTO, solarOutcome);
         } catch (Exception ex) {
             // Add error logging here
             System.err.println("Error processing user session: " + ex.getMessage());
         }
 
         return response;
+    }
+
+    @PostMapping("address_confirm")
+    public void addressConfirmController(@RequestBody UserSessionDTO userSessionDTO) {
+        System.out.println("User Session UUID on Address Confirm: " + userSessionDTO.getSessionUUID());
+        /*
+         * Retrieve User Session via sessionUUID
+         * Retrieve Address from User Session via addressId
+         * Retrieve Solar Estimate from Address via addressId
+         * Post Address and Solar Estimate to Zoho
+         * Note: Perhaps add this to one class.
+         */
     }
 
     @PostMapping("/contact_info")
