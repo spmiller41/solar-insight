@@ -49,6 +49,17 @@ public class Address {
         this.created_at = LocalDateTime.now();
     }
 
+    public void refreshAddress(PreliminaryDataDTO data) {
+        this.street = data.getStreet();
+        this.unit = data.getUnit();
+        this.city = data.getCity();
+        this.state = data.getState();
+        this.zip = data.getZip();
+        this.latitude = data.getLatitude();
+        this.longitude = data.getLongitude();
+        this.created_at = LocalDateTime.now();
+    }
+
     public Address() {}
 
     public int getId() {

@@ -33,6 +33,10 @@ public class UserSession {
         this.addressId = address.getId();
     }
 
+    public void associateAddress(Address address) {
+        this.addressId = address.getId();
+    }
+
     public UserSession() {}
 
     public int getId() {
