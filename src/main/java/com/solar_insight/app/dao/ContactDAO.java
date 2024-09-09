@@ -1,7 +1,6 @@
 package com.solar_insight.app.dao;
 
 import com.solar_insight.app.entity.Contact;
-import com.solar_insight.app.dto.ContactInfoDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +18,8 @@ public class ContactDAO {
         this.entityManager = entityManager;
     }
 
-    public int insert(Contact contact) {
+    public void insert(Contact contact) {
         entityManager.persist(contact);
-        return contact.getId();
     }
 
     public Optional<Contact> findByEmail(String email) {
