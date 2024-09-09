@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,59 +31,69 @@ public class SessionDataService {
         this.contactAddressDAO = contactAddressDAO;
     }
 
+
+
+
     /**
-     * Saves a new user session, address, and solar estimate based on preliminary data.
+     * Processes a user session by saving a new address, solar estimate, or updating the related data.
+     * <p>
+     * If the address does not exist:
+     * - If the user session does not exist:
+     *   - Insert the address, create a new user session, and add a new solar estimate.
+     * - If the user session exists:
+     *   - Update the address associated with the user session and update the solar estimate.
      * <p>
      * If the address exists:
-     * - Create a new user session.
-     * - Update or insert a solar estimate for the address.
-     * <p>
-     * If the address is new:
-     * - Insert the address, create a user session, and add a new solar estimate.
+     * - If the user session does not exist:
+     *   - Create a new user session, associating the existing address, and update the solar estimate.
+     * - If the user session exists:
+     *   - Verify whether the existing address is associated with the current user session.
+     *   - If no association is made, the current existing address will be associated with the current user session.
+     *   - If the last address associated with the current user session is not associated with any other user session,
+     *     it will be removed, along with its associated solar estimate.
      * <p>
      * Transactional: Rolls back if any operation fails.
      *
      * @param data        User-provided preliminary data.
      * @param analysis    Solar analysis data for the estimate.
-     * @param sessionUUID Unique ID for the current session.
      */
     @Transactional
-    public void processUserSessionData(PreliminaryDataDTO data, SolarOutcomeAnalysis analysis, String sessionUUID) {
+    public void processUserSessionData(PreliminaryDataDTO data, SolarOutcomeAnalysis analysis) {
+        String sessionUUID = data.getSessionUUID();
+
         Optional<Address> optionalAddress = addressDAO.findByCoordinatesOrAddress(data);
+        Optional<UserSession> optionalUserSession = userSessionDAO.findBySessionUUID(sessionUUID);
+
         if (optionalAddress.isEmpty()) {
-            Address address = new Address(data);
-            addressDAO.insert(address);
-            // Add info logging for new address here
-
-            UserSession userSession = new UserSession(data, address, sessionUUID);
-            userSessionDAO.insert(userSession);
-            // Add info logging for new user session here
-
-            SolarEstimate solarEstimate = new SolarEstimate(analysis, address);
-            solarEstimateDAO.insert(solarEstimate);
-            // Add info logging for new solar estimate here
-            // This is a potential trigger for compiling address/estimate and sending it out
-        } else {
-            Address address = optionalAddress.get();
-
-            UserSession userSession = new UserSession(data, address, sessionUUID);
-            userSessionDAO.insert(userSession);
-            // Add info logging for new user session here
-
-            Optional<SolarEstimate> optionalSolarEstimate = solarEstimateDAO.findByAddressId(address.getId());
-            if (optionalSolarEstimate.isPresent()) {
-                SolarEstimate solarEstimate = optionalSolarEstimate.get();
-                solarEstimate.refreshSolarEstimate(analysis);
-                solarEstimate = solarEstimateDAO.update(solarEstimate);
-                // Add info logging for solar estimate update here
-                // This is a potential trigger for sending out the updated estimate
+            if (optionalUserSession.isEmpty()) {
+                insertAllNewSessionData(data, analysis);
             } else {
+                Address address = new Address(data);
+                addressDAO.insert(address);
+
                 SolarEstimate solarEstimate = new SolarEstimate(analysis, address);
                 solarEstimateDAO.insert(solarEstimate);
-                // Add info logging for new solar estimate here
+
+                UserSession currentSession = optionalUserSession.get();
+                currentSession.associateAddress(address);
+                userSessionDAO.insert(currentSession);
+            }
+        } else {
+            if (optionalUserSession.isEmpty()) {
+                UserSession userSession = new UserSession(data, optionalAddress.get(), sessionUUID);
+                userSessionDAO.insert(userSession); // Add info logging for new user session.
+                updateSolarEstimate(analysis, userSession);
+            } else {
+                int sessionAddressId = optionalUserSession.get().getAddressId();
+                int newAddressId = optionalAddress.get().getId();
+                if (sessionAddressId == newAddressId) updateSolarEstimate(analysis, optionalUserSession.get());
+                else manageSessionAddressAssociation(optionalUserSession.get(), optionalAddress.get(), analysis);
             }
         }
     }
+
+
+
 
     /**
      * Processes a user session by associating the provided contact information with an address.
@@ -105,6 +116,7 @@ public class SessionDataService {
     @Transactional
     public void processUserSessionData(ContactInfoDTO contactInfo) {
         String sessionUUID = contactInfo.getSessionUUID();
+
         Optional<UserSession> optionalUserSession = userSessionDAO.findBySessionUUID(sessionUUID);
         if (optionalUserSession.isEmpty()) {
             // Add error logging here before return
@@ -138,6 +150,90 @@ public class SessionDataService {
                 // Add info logging here to notify system user has returned
                 System.out.println("Existing User Returning...");
             }
+        }
+    }
+
+
+
+
+    /*
+     * Handles the insertion of a completely new address, user session, and solar estimate.
+     *
+     * @param data        User-provided preliminary data.
+     * @param analysis    Solar analysis data for the estimate.
+     */
+    private void insertAllNewSessionData(PreliminaryDataDTO data, SolarOutcomeAnalysis analysis) {
+        String sessionUUID = data.getSessionUUID();;
+
+        Address address = new Address(data);
+        addressDAO.insert(address);
+        // Add info logging for new address
+
+        UserSession userSession = new UserSession(data, address, sessionUUID);
+        userSessionDAO.insert(userSession);
+        // Add info logging for new user session
+
+        SolarEstimate solarEstimate = new SolarEstimate(analysis, address);
+        solarEstimateDAO.insert(solarEstimate);
+        // Add info logging for new solar estimate.
+    }
+
+
+
+
+    /*
+     * Manages re-association of a user session with a new address and handles cleanup of rogue addresses.
+     * In addition, updates the solar estimate associated with the address.
+     *
+     * This method functions by storing the original associated address 'optAddressTemp'
+     * and removing its address after associating the new address with the current user session.
+     * In the context of how this method should be used, the 'original' address was most likely a
+     * mistake on the users' part - entering an incorrect address.
+     * The user session is current, so if this address doesn't exist in another user session, we may remove it.
+     *
+     * @param currentSession Existing user session.
+     * @param newAddress     Address to associate with the session.
+     */
+    private void manageSessionAddressAssociation(UserSession currentSession, Address newAddress, SolarOutcomeAnalysis analysis) {
+        Optional<Address> optAddressTemp = addressDAO.findById(currentSession.getAddressId());
+
+        // Update user session and solar estimate
+        currentSession.associateAddress(newAddress);
+        updateSolarEstimate(analysis, currentSession);
+
+        optAddressTemp.ifPresent(tempAddress -> {
+            int tempAddressId = tempAddress.getId();
+
+            // Get all user sessions associated with previous address. Remove if no associations (rogue address).
+            Optional<List<UserSession>> optSessionList = userSessionDAO.getUserSessionsByAddressId(tempAddressId);
+
+            if (optSessionList.isEmpty()) {
+                addressDAO.remove(tempAddressId);
+                // Add more organized info logging here...
+                System.out.println("Address/Estimate removed for address: " + tempAddress);
+            }
+        });
+    }
+
+
+
+
+    /*
+     * Updates or inserts a solar estimate based on the user's session.
+     *
+     * @param analysis    Solar analysis data for the estimate.
+     * @param userSession User session containing the address.
+     */
+    private void updateSolarEstimate(SolarOutcomeAnalysis analysis, UserSession userSession) {
+        Optional<SolarEstimate> optionalSolarEstimate = solarEstimateDAO.findByAddressId(userSession.getAddressId());
+        if (optionalSolarEstimate.isPresent()) {
+            SolarEstimate solarEstimate = optionalSolarEstimate.get();
+            solarEstimate.refreshSolarEstimate(analysis);
+            solarEstimate = solarEstimateDAO.update(solarEstimate);
+            // Add info logging for solar estimate update here
+        } else {
+            // Add more organized logging for this error
+            System.err.println("Could not find estimate...");
         }
     }
 
