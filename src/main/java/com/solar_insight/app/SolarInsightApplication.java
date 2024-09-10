@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.solar.service.SolarBuildingInsightService;
 import com.solar_insight.app.solar.utility.SolarConsumptionAnalyzer;
 import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
+import com.solar_insight.app.zoho_crm.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -19,28 +20,14 @@ public class SolarInsightApplication {
 	}
 
 	@Autowired
-	private RestTemplate restTemplate;
-
-	@Autowired
-	private SolarBuildingInsightService buildingInsightService;
+	private TokenService tokenService;
 
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
 
-			/*
-			GeocodedLocation location = new GeocodedLocation(40.75880146718224, -72.85091345762694);
-			JsonNode response = buildingInsightService.getSolarData(location);
-			// System.out.println(response);
-			final int AVERAGE_MONTHLY_UB = 200;
-
-			//ObjectMapper objectMapper = new ObjectMapper();
-			//JsonNode response = objectMapper.readTree(new File("C:\\Users\\lipsa\\OneDrive\\Desktop\\solar-api-response.json"));
-
-			SolarConsumptionAnalyzer consumptionAnalysis = buildingInsightService.parseConsumptionAnalysis(response, AVERAGE_MONTHLY_UB);
-			SolarOutcomeAnalysis solarOutcome = buildingInsightService.idealSolarAnalysis(response, consumptionAnalysis, AVERAGE_MONTHLY_UB);
-			System.out.println(solarOutcome);
-			 */
+			String zohoAccessToken = tokenService.getAccessToken();
+			System.out.println("Zoho Access Token: " + zohoAccessToken);
 
 		};
 
