@@ -1,16 +1,11 @@
 package com.solar_insight.app;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.solar_insight.app.solar.service.SolarBuildingInsightService;
-import com.solar_insight.app.solar.utility.SolarConsumptionAnalyzer;
-import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
-import com.solar_insight.app.zoho_crm.service.TokenService;
+import com.solar_insight.app.zoho_crm.service.ZohoRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class SolarInsightApplication {
@@ -20,14 +15,31 @@ public class SolarInsightApplication {
 	}
 
 	@Autowired
-	private TokenService tokenService;
+	private ZohoRequestService solarInsightService;
 
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
 
-			String zohoAccessToken = tokenService.getAccessToken();
-			System.out.println("Zoho Access Token: " + zohoAccessToken);
+			/*
+			Address address = new Address();
+			address.setStreet("155 Fake St");
+			address.setCity("Test City");
+			address.setState("New York");
+			address.setZip("11967");
+
+			SolarEstimate solarEstimate = new SolarEstimate();
+			solarEstimate.setMonthlyBill(250);
+			solarEstimate.setCostWithSolar(59000);
+			solarEstimate.setCostWithoutSolar(29000);
+			solarEstimate.setSystemSizeDc(9200);
+			solarEstimate.setPanelCount(23);
+			solarEstimate.setIncentives(12045);
+			solarEstimate.setEstimatedSavings(42000);
+			solarEstimate.setAnnualProductionAc(9925);
+
+			solarInsightService.createLeadPreliminaryData(address, solarEstimate, UUID.randomUUID().toString());
+			 */
 
 		};
 
