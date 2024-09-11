@@ -10,6 +10,7 @@ import com.solar_insight.app.solar.service.SatelliteImageService;
 import com.solar_insight.app.solar.service.SolarBuildingInsightService;
 import com.solar_insight.app.solar.utility.SolarConsumptionAnalyzer;
 import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
+import com.solar_insight.app.zoho_crm.service.ZohoIntegrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -25,17 +26,20 @@ public class SolarInsightRestController {
     private String googleMapsApiKey;
 
     private final SolarBuildingInsightService solarBuildingInsightService;
-
     private final SatelliteImageService imageService;
-
     private final SessionDataService sessionDataService;
+    private final ZohoIntegrationService zohoIntegrationService;
 
     @Autowired
     public SolarInsightRestController(SolarBuildingInsightService solarBuildingInsightService,
-                                      SatelliteImageService imageService, SessionDataService sessionDataService) {
+                                      SatelliteImageService imageService,
+                                      SessionDataService sessionDataService,
+                                      ZohoIntegrationService zohoIntegrationService) {
+
         this.solarBuildingInsightService = solarBuildingInsightService;
         this.imageService = imageService;
         this.sessionDataService = sessionDataService;
+        this.zohoIntegrationService = zohoIntegrationService;
     }
 
     // Health Check Endpoint
@@ -98,13 +102,7 @@ public class SolarInsightRestController {
     @PostMapping("address_confirm")
     public void addressConfirmController(@RequestBody UserSessionDTO userSessionDTO) {
         System.out.println("User Session UUID on Address Confirm: " + userSessionDTO.getSessionUUID());
-        /*
-         * Retrieve User Session via sessionUUID
-         * Retrieve Address from User Session via addressId
-         * Retrieve Solar Estimate from Address via addressId
-         * Post Address and Solar Estimate to Zoho
-         * Note: Perhaps add this to one class.
-         */
+        zohoIntegrationService.sendAddressAndEstimate(userSessionDTO);
     }
 
     @PostMapping("/contact_info")
