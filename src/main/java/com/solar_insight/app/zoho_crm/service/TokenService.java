@@ -75,7 +75,6 @@ public class TokenService {
                 String responseBody = response.getBody();
 
                 ZohoTokenResponse tokenResponse = objectMapper.readValue(responseBody, ZohoTokenResponse.class);
-                System.out.println(tokenResponse);
 
                 accessToken = tokenResponse.getAccessToken();
                 lastRefreshed = Instant.now();
