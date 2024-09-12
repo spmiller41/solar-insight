@@ -1,5 +1,6 @@
 package com.solar_insight.app.zoho_crm.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.entity.Address;
 import com.solar_insight.app.entity.SolarEstimate;
@@ -10,9 +11,11 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.swing.text.html.Option;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ZohoRequestService {
@@ -29,7 +32,7 @@ public class ZohoRequestService {
         this.restTemplate = restTemplate;
     }
 
-    public void createLeadPreliminaryData(Address address, SolarEstimate solarEstimate, String sessionUUID) {
+    public Optional<String> createLeadPreliminaryData(Address address, SolarEstimate solarEstimate, String sessionUUID) {
         String accessToken = tokenService.getAccessToken();
         String endpoint = baseUrl + ZohoModule.Solar_Insight_Leads;
 
@@ -47,14 +50,25 @@ public class ZohoRequestService {
         }
 
         HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
-        ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                // Add more organized info logging here.
+                System.out.println("Lead created with address and estimate successfully.");
 
-        if (response.getStatusCode().is2xxSuccessful()) {
-            // Add more organized info logging here.
-            System.out.println("Lead created with address and estimate successfully.");
-        } else {
-            // Add more organized error logging here.
-            System.err.println("Failed to create lead with address and estimate.");
+                // Parse the Zoho Record Id from the response and return it if possible.
+                JsonNode jsonNode = objectMapper.readTree(response.getBody());
+                String recordId = jsonNode.path("data").get(0).path("details").path("id").asText();
+                return Optional.of(recordId);
+            } else {
+                // Add more organized error logging here.
+                System.err.println("Failed to create lead with address and estimate.");
+                return Optional.empty();
+            }
+        } catch (Exception ex) {
+            // Add organized error logging here
+            System.err.println("Exception Message: " + ex.getMessage());
+            return Optional.empty();
         }
     }
 
