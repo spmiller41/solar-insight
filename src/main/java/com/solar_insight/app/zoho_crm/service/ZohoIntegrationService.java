@@ -7,6 +7,7 @@ import com.solar_insight.app.dto.UserSessionDTO;
 import com.solar_insight.app.entity.Address;
 import com.solar_insight.app.entity.SolarEstimate;
 import com.solar_insight.app.entity.UserSession;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,14 +15,6 @@ import java.util.Optional;
 
 @Service
 public class ZohoIntegrationService {
-
-    /*
-     * Retrieve User Session via sessionUUID
-     * Retrieve Address from User Session via addressId
-     * Retrieve Solar Estimate from Address via addressId
-     * Post Address and Solar Estimate to Zoho
-     * Note: Perhaps add this to one class.
-     */
 
     private final UserSessionDAO userSessionDAO;
     private final AddressDAO addressDAO;
@@ -37,6 +30,7 @@ public class ZohoIntegrationService {
         this.solarInsightService = solarInsightService;
     }
 
+    @Transactional
     public void sendAddressAndEstimate(UserSessionDTO userSessionDTO) {
         // Find user session, make sure it's present.
         Optional<UserSession> optUserSession = userSessionDAO.findBySessionUUID(userSessionDTO.getSessionUUID());
@@ -54,7 +48,19 @@ public class ZohoIntegrationService {
                     SolarEstimate solarEstimate = optSolarEstimate.get();
 
                     // Send address, estimate, and session uuid to Zoho CRM.
-                    solarInsightService.createLeadPreliminaryData(address, solarEstimate, userSession.getSessionUUID());
+                    Optional<String> optZohoRecordId = solarInsightService
+                            .createLeadPreliminaryData(address, solarEstimate, userSession.getSessionUUID());
+
+                    // Update this address with the returned record id from Zoho.
+                    if (optZohoRecordId.isPresent()) {
+                        address.setZohoSolarInsightLeadId(optZohoRecordId.get());
+                        address = addressDAO.update(address);
+                        System.out.println("The address was updated with the Zoho Record Id: " + address.getZohoSolarInsightLeadId());
+                        // Add info logging here
+                    } else {
+                        // Add more organized error logging here
+                        System.err.println("There was an issue retrieving and updating the address with the Zoho Record Id.");
+                    }
                 }
             }
         }
