@@ -38,18 +38,10 @@ public class Address {
     @Column(name = "created_at")
     private LocalDateTime created_at;
 
-    public Address(PreliminaryDataDTO data) {
-        this.street = data.getStreet();
-        this.unit = data.getUnit();
-        this.city = data.getCity();
-        this.state = data.getState();
-        this.zip = data.getZip();
-        this.latitude = data.getLatitude();
-        this.longitude = data.getLongitude();
-        this.created_at = LocalDateTime.now();
-    }
+    @Column(name = "zoho_solar_insight_lead_id")
+    private String zohoSolarInsightLeadId;
 
-    public void refreshAddress(PreliminaryDataDTO data) {
+    public Address(PreliminaryDataDTO data) {
         this.street = data.getStreet();
         this.unit = data.getUnit();
         this.city = data.getCity();
@@ -134,6 +126,10 @@ public class Address {
         this.created_at = created_at;
     }
 
+    public String getZohoSolarInsightLeadId() { return zohoSolarInsightLeadId; }
+
+    public void setZohoSolarInsightLeadId(String zohoSolarInsightLeadId) { this.zohoSolarInsightLeadId = zohoSolarInsightLeadId; }
+
     @Override
     public String toString() {
         return "Address{" +
@@ -146,6 +142,7 @@ public class Address {
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
                 ", created_at=" + created_at +
+                ", zohoSolarInsightLeadId='" + zohoSolarInsightLeadId + '\'' +
                 '}';
     }
 
