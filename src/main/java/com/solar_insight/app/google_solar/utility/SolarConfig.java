@@ -1,4 +1,4 @@
-package com.solar_insight.app.solar.utility;
+package com.solar_insight.app.google_solar.utility;
 
 public class SolarConfig {
     static final double DC_TO_AC_EFFICIENCY = 0.85;

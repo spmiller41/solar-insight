@@ -1,4 +1,4 @@
-package com.solar_insight.app.solar.service;
+package com.solar_insight.app.google_solar.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.logs.RestTemplateLog;
 import com.solar_insight.app.logs.SolarBuildingInsightLog;
 import com.solar_insight.app.GeocodedLocation;
-import com.solar_insight.app.solar.utility.SolarConsumptionAnalyzer;
-import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
+import com.solar_insight.app.google_solar.utility.SolarConsumptionAnalyzer;
+import com.solar_insight.app.google_solar.utility.SolarOutcomeAnalysis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

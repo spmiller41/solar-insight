@@ -1,6 +1,6 @@
 package com.solar_insight.app.entity;
 
-import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
+import com.solar_insight.app.google_solar.utility.SolarOutcomeAnalysis;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

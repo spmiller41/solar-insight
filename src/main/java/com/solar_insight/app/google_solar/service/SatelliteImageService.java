@@ -1,8 +1,9 @@
-package com.solar_insight.app.solar.service;
+package com.solar_insight.app.google_solar.service;
 
 import com.solar_insight.app.GeocodedLocation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -16,6 +17,7 @@ public class SatelliteImageService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Cacheable(value = "satelliteImages", key = "#geocodedLocation.latitude" + "," + "#geocodedLocation.longitude()")
     public byte[] getSatelliteImage(GeocodedLocation geocodedLocation) {
         String url = UriComponentsBuilder.fromHttpUrl("https://maps.googleapis.com/maps/api/staticmap")
                 .queryParam("center", geocodedLocation.latitude() + "," + geocodedLocation.longitude())

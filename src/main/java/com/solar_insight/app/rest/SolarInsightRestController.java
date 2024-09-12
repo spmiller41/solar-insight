@@ -6,10 +6,10 @@ import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
 import com.solar_insight.app.dto.UserSessionDTO;
 import com.solar_insight.app.service.SessionDataService;
-import com.solar_insight.app.solar.service.SatelliteImageService;
-import com.solar_insight.app.solar.service.SolarBuildingInsightService;
-import com.solar_insight.app.solar.utility.SolarConsumptionAnalyzer;
-import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
+import com.solar_insight.app.google_solar.service.SatelliteImageService;
+import com.solar_insight.app.google_solar.service.SolarBuildingInsightService;
+import com.solar_insight.app.google_solar.utility.SolarConsumptionAnalyzer;
+import com.solar_insight.app.google_solar.utility.SolarOutcomeAnalysis;
 import com.solar_insight.app.zoho_crm.service.ZohoIntegrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -76,8 +76,13 @@ public class SolarInsightRestController {
                         buildingInsightResponse, consumptionAnalysis, preliminaryDataDTO.getAvgMonthlyEnergyBill());
 
 
-        byte[] imageBytes = imageService.getSatelliteImage(geocodedLocation);
-        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        byte[] cachedImage = imageService.getSatelliteImage(geocodedLocation);
+        String base64Image = Base64.getEncoder().encodeToString(cachedImage);
+
+        if (cachedImage != null) {
+            // Proceed with sending the image and other data to Zoho
+            System.out.println("Image retrieved from cache.");
+        }
 
         NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
         Map<String, String> response = new HashMap<>();

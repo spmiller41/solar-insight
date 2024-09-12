@@ -4,7 +4,7 @@ import com.solar_insight.app.dao.*;
 import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.entity.*;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
-import com.solar_insight.app.solar.utility.SolarOutcomeAnalysis;
+import com.solar_insight.app.google_solar.utility.SolarOutcomeAnalysis;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
