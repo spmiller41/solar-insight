@@ -5,6 +5,7 @@ import com.solar_insight.app.GeocodedLocation;
 import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
 import com.solar_insight.app.dto.UserSessionDTO;
+import com.solar_insight.app.entity.ContactAddress;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
 import com.solar_insight.app.google_solar.service.SolarBuildingInsightService;
@@ -104,7 +105,7 @@ public class SolarInsightRestController {
         return response;
     }
 
-    @PostMapping("address_confirm")
+    @PostMapping("/address_confirm")
     public void addressConfirmController(@RequestBody UserSessionDTO userSessionDTO) {
         System.out.println("User Session UUID on Address Confirm: " + userSessionDTO.getSessionUUID());
         zohoIntegrationService.sendAddressAndEstimate(userSessionDTO);
@@ -113,7 +114,7 @@ public class SolarInsightRestController {
     @PostMapping("/contact_info")
     public void contactInfoController(@RequestBody ContactInfoDTO contactInfo) {
         System.out.println(contactInfo);
-        sessionDataService.processUserSessionData(contactInfo);
+        Optional<ContactAddress> optGeneratedLead = sessionDataService.processUserSessionData(contactInfo);
     }
 
 }
