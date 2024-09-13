@@ -1,5 +1,10 @@
 package com.solar_insight.app;
 
+import com.solar_insight.app.dao.ContactAddressDAO;
+import com.solar_insight.app.entity.Address;
+import com.solar_insight.app.entity.Contact;
+import com.solar_insight.app.entity.ContactAddress;
+import com.solar_insight.app.entity.SolarEstimate;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleAccess;
 import com.solar_insight.app.zoho_crm.service.TokenService;
 import com.solar_insight.app.zoho_crm.service.ZohoRequestService;
@@ -16,6 +21,7 @@ public class SolarInsightApplication {
 		SpringApplication.run(SolarInsightApplication.class, args);
 	}
 
+	/*
 	@Autowired
 	private ZohoRequestService solarInsightService;
 
@@ -26,31 +32,21 @@ public class SolarInsightApplication {
 	public CommandLineRunner demo() {
 		return (args) -> {
 
-			/*
-
 			Address address = new Address();
-			address.setStreet("155 Fake St");
-			address.setCity("Test City");
-			address.setState("New York");
-			address.setZip("11967");
+			address.setZohoSolarInsightLeadId("3880966000279568167");
 
-			SolarEstimate solarEstimate = new SolarEstimate();
-			solarEstimate.setMonthlyBill(250);
-			solarEstimate.setCostWithSolar(59000);
-			solarEstimate.setCostWithoutSolar(29000);
-			solarEstimate.setSystemSizeDc(9200);
-			solarEstimate.setPanelCount(23);
-			solarEstimate.setIncentives(12045);
-			solarEstimate.setEstimatedSavings(42000);
-			solarEstimate.setAnnualProductionAc(9925);
+			Contact contact = new Contact();
+			contact.setFirstName("Sean");
+			contact.setLastName("Miller");
+			contact.setEmail("spmiller41@gmail.com");
+			contact.setPhone("6318895508");
 
-			solarInsightService.createLeadPreliminaryData(address, solarEstimate, UUID.randomUUID().toString());
-
-			 */
+			solarInsightService.updateSolarInsightLead(contact, address);
 
 		};
 
 	}
+	*/
 
 }
 
