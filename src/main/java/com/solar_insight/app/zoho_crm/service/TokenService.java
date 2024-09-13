@@ -13,13 +13,13 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Instant;
 
 @Service
-public class TokenService {
+public class CustomModTokenService {
 
     @Value("${zoho.token.base.url}")
     private String baseUrl;
 
-    @Value("${zoho.leads.refresh.token}")
-    private String refreshToken;
+    @Value("${zoho.custom.module.refresh.token}")
+    private String customModuleRefreshToken;
 
     @Value("${zoho.client.id}")
     private String clientId;
@@ -35,7 +35,7 @@ public class TokenService {
     private int expiresIn;
 
     @Autowired
-    public TokenService(RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public CustomModTokenService(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
     }
@@ -60,7 +60,8 @@ public class TokenService {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("refresh_token", refreshToken);
+
+        requestBody.add("refresh_token", customModuleRefreshToken);
         requestBody.add("client_id", clientId);
         requestBody.add("client_secret", clientSecret);
         requestBody.add("grant_type", "refresh_token");
