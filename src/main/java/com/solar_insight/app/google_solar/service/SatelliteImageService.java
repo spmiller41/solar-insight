@@ -8,6 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 @Service
 public class SatelliteImageService {
 
@@ -30,6 +34,22 @@ public class SatelliteImageService {
                 .toUriString();
 
         return restTemplate.getForObject(url, byte[].class);
+    }
+
+    public File createJpegFromCachedImage(GeocodedLocation geocodedLocation) throws IOException {
+        byte[] cachedImage = getSatelliteImage(geocodedLocation);
+
+        if (cachedImage == null) {
+            throw new IllegalStateException("No cached image found for the given geocoded location.");
+        }
+
+        File imageFile = File.createTempFile("satellite_image_", ".jpg");
+
+        try (FileOutputStream fos = new FileOutputStream(imageFile)) {
+            fos.write(cachedImage);
+        }
+
+        return imageFile;
     }
 
 }
