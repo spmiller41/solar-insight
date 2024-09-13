@@ -2,16 +2,23 @@ package com.solar_insight.app.zoho_crm.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.solar_insight.app.GeocodedLocation;
 import com.solar_insight.app.entity.Address;
 import com.solar_insight.app.entity.SolarEstimate;
-import com.solar_insight.app.zoho_crm.ZohoModule;
+import com.solar_insight.app.google_solar.service.SatelliteImageService;
+import com.solar_insight.app.zoho_crm.enums.ZohoModuleAccess;
+import com.solar_insight.app.zoho_crm.enums.ZohoModuleApiName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.swing.text.html.Option;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,16 +32,21 @@ public class ZohoRequestService {
 
     private final TokenService tokenService;
     private final RestTemplate restTemplate;
+    private final SatelliteImageService satelliteImageService;
 
     @Autowired
-    public ZohoRequestService(TokenService tokenService, RestTemplate restTemplate) {
+    public ZohoRequestService(TokenService tokenService, RestTemplate restTemplate, SatelliteImageService satelliteImageService) {
         this.tokenService = tokenService;
         this.restTemplate = restTemplate;
+        this.satelliteImageService = satelliteImageService;
     }
 
+
+
+
     public Optional<String> createLeadPreliminaryData(Address address, SolarEstimate solarEstimate, String sessionUUID) {
-        String accessToken = tokenService.getAccessToken();
-        String endpoint = baseUrl + ZohoModule.Solar_Insight_Leads;
+        String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
+        String endpoint = baseUrl + ZohoModuleApiName.SOLAR_INSIGHT_LEADS;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -72,7 +84,21 @@ public class ZohoRequestService {
         }
     }
 
+
+
+
     private Map<String, Object> createPayload(Address address, SolarEstimate solarEstimate, String sessionUUID) {
+        Optional<String> optZohoFileId = Optional.empty();
+
+        try {
+            File jpegSatellite = satelliteImageService.createJpegFromCachedImage(
+                            new GeocodedLocation(address.getLatitude(), address.getLongitude()));
+            optZohoFileId = uploadImageToZoho(jpegSatellite);
+        } catch (IOException ex) {
+            // Add more organized error logging here
+            System.out.println(ex.getMessage());
+        }
+
         Map<String, Object> body = new HashMap<>();
 
         // Zoho expects a name for the record. Use street and zip.
@@ -94,11 +120,56 @@ public class ZohoRequestService {
         body.put("Annual_AC_Production", solarEstimate.getAnnualProductionAc());
         body.put("User_Session_UUID", sessionUUID);
 
+        // Wrap the Encrypted_Id for the Satellite_Image field
+        optZohoFileId.ifPresent(zohoFileId -> {
+            Map<String, String> imageUpload = new HashMap<>();
+            imageUpload.put("Encrypted_Id", zohoFileId);  // Use 'Encrypted_Id' for image upload
+            body.put("Satellite_Image", List.of(imageUpload));  // Wrap it in a list
+        });
+
         // Wrap the record inside a "data" key, as Zoho expects an array of records
         Map<String, Object> payload = new HashMap<>();
         payload.put("data", List.of(body));
 
         return payload;
     }
+
+
+
+
+    private Optional<String> uploadImageToZoho(File imageFile) {
+        String accessToken = tokenService.getAccessToken(ZohoModuleAccess.FILE_UPLOAD.toString());
+        String endpoint = baseUrl + ZohoModuleApiName.FILE_UPLOAD;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(accessToken);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new FileSystemResource(imageFile));  // Make sure the key is 'file'
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, requestEntity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(response.getBody());
+                return Optional.of(rootNode.path("data").get(0).path("details").path("id").asText());
+            } else {
+                // Add more organized error logging here.
+                System.err.println("Failed to upload image to Zoho: " + response.getBody());
+                return Optional.empty();
+            }
+        } catch (Exception ex) {
+            // Add more organized error logging here.
+            System.err.println("Exception while uploading image: " + ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+
+
 
 }
