@@ -9,9 +9,18 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * SessionDataService handles database transactions for user sessions in the lead generation flow.
+ * It processes data input from the frontend, including utility bills, addresses, and contact
+ * information, and manages the insertion and updating of addresses, solar estimates, and contacts.
+ * <p>
+ * This service maintains transactional integrity, ensuring any database failure results in a rollback,
+ * and enforces a clear separation of concerns by focusing solely on persistence logic.
+ */
 @Service
 public class SessionDataService {
 
@@ -109,24 +118,29 @@ public class SessionDataService {
      * If the contact does not exist:
      * - Insert the new contact and associate it with the address.
      * <p>
+     * Returns an Optional<String>:
+     * - If a new contact or contact-address association is created, returns the ID of the contact-address association.
+     * - If no new contact or association is created, returns Optional.empty().
+     * <p>
      * Transactional: Rolls back if any operation fails.
      *
      * @param contactInfo  Contact information provided by the user.
+     * @return Optional<String> - ID of the new contact-address association if a new lead is generated, or Optional.empty() if no changes are made.
      */
     @Transactional
-    public void processUserSessionData(ContactInfoDTO contactInfo) {
+    public Optional<ContactAddress> processUserSessionData(ContactInfoDTO contactInfo) {
         String sessionUUID = contactInfo.getSessionUUID();
 
         Optional<UserSession> optionalUserSession = userSessionDAO.findBySessionUUID(sessionUUID);
         if (optionalUserSession.isEmpty()) {
             // Add error logging here before return
-            return;
+            return Optional.empty();
         }
 
         Optional<Address> optionalAddress = addressDAO.findById(optionalUserSession.get().getAddressId());
         if (optionalAddress.isEmpty()) {
             // Add error logging here before return
-            return;
+            return Optional.empty();
         }
 
         Optional<Contact> optionalContact = contactDAO.findByEmail(contactInfo.getEmail());
@@ -136,21 +150,23 @@ public class SessionDataService {
             // Add info logging for new contact here.
             ContactAddress contactAddress = new ContactAddress(contact, optionalAddress.get());
             contactAddressDAO.insert(contactAddress);
+            return Optional.of(contactAddress);
             // Add info logging for new contact_address association here
-            // Note: This is a potential trigger for compiling the full lead information and sending out
         } else {
             Optional<ContactAddress> optionalContactAddress =
                     contactAddressDAO.findByAddressAndContact(optionalAddress.get().getId(), optionalContact.get().getId());
             if (optionalContactAddress.isEmpty()) {
                 ContactAddress contactAddress = new ContactAddress(optionalContact.get(), optionalAddress.get());
                 contactAddressDAO.insert(contactAddress);
+                return Optional.of(contactAddress);
                 // Add info logging for new contact_address association here
-                // Note: This is another potential trigger for compiling the full lead information and sending out
             } else {
                 // Add info logging here to notify system user has returned
                 System.out.println("Existing User Returning...");
             }
         }
+
+        return Optional.empty();
     }
 
 
