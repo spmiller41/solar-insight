@@ -27,6 +27,7 @@ public class SolarInsightApplication {
 		return (args) -> {
 
 			/*
+
 			Address address = new Address();
 			address.setStreet("155 Fake St");
 			address.setCity("Test City");
@@ -44,6 +45,7 @@ public class SolarInsightApplication {
 			solarEstimate.setAnnualProductionAc(9925);
 
 			solarInsightService.createLeadPreliminaryData(address, solarEstimate, UUID.randomUUID().toString());
+
 			 */
 
 		};
