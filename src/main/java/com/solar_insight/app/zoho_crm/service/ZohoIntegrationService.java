@@ -1,12 +1,11 @@
 package com.solar_insight.app.zoho_crm.service;
 
 import com.solar_insight.app.dao.AddressDAO;
+import com.solar_insight.app.dao.ContactDAO;
 import com.solar_insight.app.dao.SolarEstimateDAO;
 import com.solar_insight.app.dao.UserSessionDAO;
 import com.solar_insight.app.dto.UserSessionDTO;
-import com.solar_insight.app.entity.Address;
-import com.solar_insight.app.entity.SolarEstimate;
-import com.solar_insight.app.entity.UserSession;
+import com.solar_insight.app.entity.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,14 +19,16 @@ public class ZohoIntegrationService {
     private final AddressDAO addressDAO;
     private final SolarEstimateDAO estimateDAO;
     private final ZohoRequestService solarInsightService;
+    private final ContactDAO contactDAO;
 
     @Autowired
     public ZohoIntegrationService(UserSessionDAO userSessionDAO, AddressDAO addressDAO,
-                                  SolarEstimateDAO estimateDAO, ZohoRequestService solarInsightService) {
+                                  SolarEstimateDAO estimateDAO, ZohoRequestService solarInsightService, ContactDAO contactDAO) {
         this.userSessionDAO = userSessionDAO;
         this.addressDAO = addressDAO;
         this.estimateDAO = estimateDAO;
         this.solarInsightService = solarInsightService;
+        this.contactDAO = contactDAO;
     }
 
     @Transactional
@@ -49,7 +50,7 @@ public class ZohoIntegrationService {
 
                     // Send address, estimate, and session uuid to Zoho CRM.
                     Optional<String> optZohoRecordId = solarInsightService
-                            .createLeadPreliminaryData(address, solarEstimate, userSession.getSessionUUID());
+                            .createSolarInsightLead(address, solarEstimate, userSession.getSessionUUID());
 
                     // Update this address with the returned record id from Zoho.
                     if (optZohoRecordId.isPresent()) {
@@ -64,6 +65,20 @@ public class ZohoIntegrationService {
                 }
             }
         }
+    }
+
+    @Transactional
+    public void addContactToEstimate(ContactAddress contactAddress) {
+        Optional<Contact> optContact = contactDAO.findById(contactAddress.getContactId());
+        Optional<Address> optAddress = addressDAO.findById(contactAddress.getAddressId());
+
+        if (optContact.isEmpty() || optAddress.isEmpty()) {
+            // Add organized error logging here
+            System.err.println("One or more records could not be found for this generated lead.");
+            return;
+        }
+
+        solarInsightService.updateSolarInsightLead(optContact.get(), optAddress.get());
     }
 
 }

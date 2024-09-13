@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.GeocodedLocation;
 import com.solar_insight.app.entity.Address;
+import com.solar_insight.app.entity.Contact;
+import com.solar_insight.app.entity.ContactAddress;
 import com.solar_insight.app.entity.SolarEstimate;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleAccess;
@@ -44,7 +46,7 @@ public class ZohoRequestService {
 
 
 
-    public Optional<String> createLeadPreliminaryData(Address address, SolarEstimate solarEstimate, String sessionUUID) {
+    public Optional<String> createSolarInsightLead(Address address, SolarEstimate solarEstimate, String sessionUUID) {
         String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
         String endpoint = baseUrl + ZohoModuleApiName.SOLAR_INSIGHT_LEADS;
 
@@ -66,7 +68,7 @@ public class ZohoRequestService {
             ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
             if (response.getStatusCode().is2xxSuccessful()) {
                 // Add more organized info logging here.
-                System.out.println("Lead created with address and estimate successfully.");
+                System.out.println("Solar Insight Lead created with address and estimate successfully.");
 
                 // Parse the Zoho Record Id from the response and return it if possible.
                 JsonNode jsonNode = objectMapper.readTree(response.getBody());
@@ -82,6 +84,59 @@ public class ZohoRequestService {
             System.err.println("Exception Message: " + ex.getMessage());
             return Optional.empty();
         }
+    }
+
+
+
+    public void updateSolarInsightLead(Contact contact, Address address) {
+        String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
+        String crmRecordId = address.getZohoSolarInsightLeadId();
+        String endpoint = baseUrl + ZohoModuleApiName.SOLAR_INSIGHT_LEADS + "/" + crmRecordId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonPayload = null;
+        try {
+            jsonPayload = objectMapper.writeValueAsString(createPayload(contact, address));
+        } catch (Exception ex) {
+            // Add more organized error logging here
+            System.err.println(ex.getMessage());
+        }
+
+        HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, String.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                // Add organized info logging here
+                System.out.println("Solar Insight Lead updated successfully with contact information.");
+            } else {
+                // Add organized error logging here
+                System.err.println("Failed to update Solar Insight Lead with contact information.");
+            }
+        } catch (Exception ex) {
+            // Add organized error logging here
+            System.err.println("Exception Message: " + ex.getMessage());
+        }
+    }
+
+
+
+
+    private Map<String, Object> createPayload(Contact contact, Address address) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("First_Name", contact.getFirstName());
+        body.put("Last_Name", contact.getLastName());
+        body.put("Email", contact.getEmail());
+        body.put("Phone", contact.getPhone());
+
+        // Wrap the record inside a "data" key, as Zoho expects an array of records
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("data", List.of(body));
+
+        return payload;
     }
 
 
