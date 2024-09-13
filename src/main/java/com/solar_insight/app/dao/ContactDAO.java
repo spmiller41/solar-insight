@@ -1,5 +1,6 @@
 package com.solar_insight.app.dao;
 
+import com.solar_insight.app.entity.Address;
 import com.solar_insight.app.entity.Contact;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -27,6 +28,18 @@ public class ContactDAO {
         try {
             return Optional.of(entityManager.createQuery(query, Contact.class)
                     .setParameter("email", email)
+                    .getSingleResult());
+        } catch (NoResultException ex) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Contact> findById(int contactId) {
+        String query = "SELECT c FROM Contact c WHERE c.id = :contactId";
+
+        try {
+            return Optional.of(entityManager.createQuery(query, Contact.class)
+                    .setParameter("contactId", contactId)
                     .getSingleResult());
         } catch (NoResultException ex) {
             return Optional.empty();
