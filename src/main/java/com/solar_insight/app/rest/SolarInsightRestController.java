@@ -115,6 +115,7 @@ public class SolarInsightRestController {
     public void contactInfoController(@RequestBody ContactInfoDTO contactInfo) {
         System.out.println(contactInfo);
         Optional<ContactAddress> optGeneratedLead = sessionDataService.processUserSessionData(contactInfo);
+        optGeneratedLead.ifPresent(zohoIntegrationService::addContactToEstimate);
     }
 
 }
