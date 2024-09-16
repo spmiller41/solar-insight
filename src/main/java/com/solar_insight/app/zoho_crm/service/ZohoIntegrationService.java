@@ -43,6 +43,12 @@ public class ZohoIntegrationService {
             if (optAddress.isPresent()) {
                 Address address = optAddress.get();
 
+                // If the address has already been added to Zoho, return.
+                if (address.getZohoSolarInsightLeadId() != null) {
+                    // Add organized info logging here
+                    return;
+                }
+
                 // Find solar estimate, make sure it's present.
                 Optional<SolarEstimate> optSolarEstimate = estimateDAO.findByAddressId(address.getId());
                 if (optSolarEstimate.isPresent()) {
