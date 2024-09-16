@@ -9,6 +9,8 @@ import jakarta.persistence.NoResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,12 +33,13 @@ public class AddressDAO {
     public Optional<Address> findByCoordinatesOrAddress(PreliminaryDataDTO data) {
         String query = "SELECT a FROM Address a WHERE " +
                 "(a.latitude = :latitude AND a.longitude = :longitude) OR " +
-                "(a.street = :street AND a.unit = :unit AND a.city = :city AND a.state = :state AND a.zip = :zip)";
+                "(a.street = :street AND (a.unit = :unit OR (a.unit IS NULL AND :unit IS NULL)) AND " +
+                "a.city = :city AND a.state = :state AND a.zip = :zip)";
 
         try {
             return Optional.of(entityManager.createQuery(query, Address.class)
-                    .setParameter("latitude", data.getLatitude())
-                    .setParameter("longitude", data.getLongitude())
+                    .setParameter("latitude", BigDecimal.valueOf(data.getLatitude()).setScale(7, RoundingMode.HALF_UP))
+                    .setParameter("longitude", BigDecimal.valueOf(data.getLongitude()).setScale(7, RoundingMode.HALF_UP))
                     .setParameter("street", data.getStreet())
                     .setParameter("unit", data.getUnit())
                     .setParameter("city", data.getCity())

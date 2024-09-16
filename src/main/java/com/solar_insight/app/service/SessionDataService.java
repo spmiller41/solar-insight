@@ -75,28 +75,36 @@ public class SessionDataService {
 
         if (optionalAddress.isEmpty()) {
             if (optionalUserSession.isEmpty()) {
+                System.out.println("Address and User Session Empty. Creating User Session, Address, and Estimate.");
                 insertAllNewSessionData(data, analysis);
             } else {
+                System.out.println("Address is Empty, User Session Exists. Creating Address and Estimate. Associating Address.");
                 Address address = new Address(data);
                 addressDAO.insert(address);
 
                 SolarEstimate solarEstimate = new SolarEstimate(analysis, address);
                 solarEstimateDAO.insert(solarEstimate);
 
-                UserSession currentSession = optionalUserSession.get();
-                currentSession.associateAddress(address);
-                userSessionDAO.insert(currentSession);
+                manageSessionAddressAssociation(optionalUserSession.get(), address, analysis);
             }
         } else {
             if (optionalUserSession.isEmpty()) {
+                System.out.println("Address Exists, User Session is Empty. Creating new User Session and associating Address.");
                 UserSession userSession = new UserSession(data, optionalAddress.get(), sessionUUID);
                 userSessionDAO.insert(userSession); // Add info logging for new user session.
                 updateSolarEstimate(analysis, userSession);
             } else {
+                System.out.println("Address and User Session Exists. Checking to see if the last address associated is the same as the new one entered.");
                 int sessionAddressId = optionalUserSession.get().getAddressId();
                 int newAddressId = optionalAddress.get().getId();
-                if (sessionAddressId == newAddressId) updateSolarEstimate(analysis, optionalUserSession.get());
-                else manageSessionAddressAssociation(optionalUserSession.get(), optionalAddress.get(), analysis);
+                if (sessionAddressId == newAddressId) {
+                    System.out.println("The current User Session address is the same as the one received via endpoint, only updating Solar Estimate");
+                    updateSolarEstimate(analysis, optionalUserSession.get());
+                } else {
+                    System.out.println("The current User Session address is different from the one received via endpoint, " +
+                            "we need to check if the current associated address exists in any other user session besides this one and manage it");
+                    manageSessionAddressAssociation(optionalUserSession.get(), optionalAddress.get(), analysis);
+                }
             }
         }
     }
@@ -209,12 +217,14 @@ public class SessionDataService {
      *
      * @param currentSession Existing user session.
      * @param newAddress     Address to associate with the session.
+     * @param analysis       The current calculated solar outcome.
      */
     private void manageSessionAddressAssociation(UserSession currentSession, Address newAddress, SolarOutcomeAnalysis analysis) {
         Optional<Address> optAddressTemp = addressDAO.findById(currentSession.getAddressId());
 
         // Update user session and solar estimate
         currentSession.associateAddress(newAddress);
+        currentSession = userSessionDAO.update(currentSession);
         updateSolarEstimate(analysis, currentSession);
 
         optAddressTemp.ifPresent(tempAddress -> {
@@ -245,6 +255,7 @@ public class SessionDataService {
         if (optionalSolarEstimate.isPresent()) {
             SolarEstimate solarEstimate = optionalSolarEstimate.get();
             solarEstimate.refreshSolarEstimate(analysis);
+            solarEstimate.setAddressId(userSession.getAddressId());
             solarEstimate = solarEstimateDAO.update(solarEstimate);
             // Add info logging for solar estimate update here
         } else {
