@@ -31,7 +31,6 @@ public class SolarInsightApplication {
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
-
 			Address address = new Address();
 			address.setZohoSolarInsightLeadId("3880966000279568167");
 
@@ -42,7 +41,6 @@ public class SolarInsightApplication {
 			contact.setPhone("6318895508");
 
 			solarInsightService.updateSolarInsightLead(contact, address);
-
 		};
 
 	}
