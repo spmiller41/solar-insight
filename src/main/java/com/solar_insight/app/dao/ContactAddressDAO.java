@@ -1,6 +1,7 @@
 package com.solar_insight.app.dao;
 
 import com.solar_insight.app.entity.ContactAddress;
+import com.solar_insight.app.entity.UserSession;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ public class ContactAddressDAO {
         entityManager.persist(contactAddress);
     }
 
+    public ContactAddress update(ContactAddress contactAddress) { return entityManager.merge(contactAddress); }
+
     public Optional<ContactAddress> findByAddressAndContact(int addressId, int contactId) {
         String query = "SELECT ca FROM ContactAddress ca WHERE ca.addressId = :addressId AND ca.contactId = :contactId";
 
@@ -31,6 +34,18 @@ public class ContactAddressDAO {
                     .setParameter("contactId", contactId)
                     .getSingleResult());
         } catch (NoResultException ex) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<ContactAddress> findByUserSession(UserSession userSession) {
+        String query = "SELECT ca FROM ContactAddress ca WHERE ca.lastUserSessionId = :userSessionId";
+
+        try {
+            return Optional.of(entityManager.createQuery(query, ContactAddress.class)
+                    .setParameter("userSessionId", userSession.getId())
+                    .getSingleResult());
+        } catch (Exception ex) {
             return Optional.empty();
         }
     }
