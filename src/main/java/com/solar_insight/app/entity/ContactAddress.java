@@ -17,9 +17,17 @@ public class ContactAddress {
     @Column(name = "contact_id")
     private int contactId;
 
-    public ContactAddress(Contact contact, Address address) {
+    @Column(name = "last_user_session_id")
+    private int lastUserSessionId;
+
+    public ContactAddress(Contact contact, Address address, UserSession userSession) {
         this.contactId = contact.getId();
         this.addressId = address.getId();
+        this.lastUserSessionId = userSession.getId();
+    }
+
+    public void refreshLastUserSession(UserSession userSession) {
+        this.lastUserSessionId = userSession.getId();
     }
 
     public ContactAddress() {}
@@ -48,12 +56,17 @@ public class ContactAddress {
         this.contactId = contactId;
     }
 
+    public int getLastUserSessionId() { return lastUserSessionId; }
+
+    public void setLastUserSessionId(int lastUserSessionId) { this.lastUserSessionId = lastUserSessionId; }
+
     @Override
     public String toString() {
         return "ContactAddress{" +
                 "id=" + id +
                 ", addressId=" + addressId +
                 ", contactId=" + contactId +
+                ", lastUserSessionId=" + lastUserSessionId +
                 '}';
     }
 
