@@ -5,6 +5,7 @@ import com.solar_insight.app.entity.Address;
 import com.solar_insight.app.entity.Contact;
 import com.solar_insight.app.entity.ContactAddress;
 import com.solar_insight.app.entity.SolarEstimate;
+import com.solar_insight.app.ycbm.service.BookingUrlService;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleAccess;
 import com.solar_insight.app.zoho_crm.service.TokenService;
 import com.solar_insight.app.zoho_crm.service.ZohoRequestService;
@@ -23,28 +24,27 @@ public class SolarInsightApplication {
 
 	/*
 	@Autowired
-	private ZohoRequestService solarInsightService;
-
-	@Autowired
-	private TokenService tokenService;
+	private BookingUrlService bookingUrlService;
 
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
-			Address address = new Address();
-			address.setZohoSolarInsightLeadId("3880966000279568167");
 
-			Contact contact = new Contact();
-			contact.setFirstName("Sean");
-			contact.setLastName("Miller");
-			contact.setEmail("spmiller41@gmail.com");
-			contact.setPhone("6318895508");
+			ContactAddress contactAddress = new ContactAddress();
+			contactAddress.setAddressId(1);
+			contactAddress.setContactId(1);
+			contactAddress.setId(1);
 
-			solarInsightService.updateSolarInsightLead(contact, address);
+			String sessionUUID= "01112ea8-1056-45cf-8012-6c312aff7d82";
+
+			String queryUrl = bookingUrlService.buildQueryUrl(contactAddress, sessionUUID);
+			System.out.println("Booking Query URL: " + queryUrl);
+
 		};
 
 	}
-	*/
+	 */
+
 
 }
 
