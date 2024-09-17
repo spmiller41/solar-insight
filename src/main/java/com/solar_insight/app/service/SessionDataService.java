@@ -122,55 +122,62 @@ public class SessionDataService {
      * If the contact exists:
      * - Check if the contact is already associated with the address in the junction table.
      * - If not associated, create the association.
+     * - If already associated, update the contact-address association with the new session UUID.
      * <p>
      * If the contact does not exist:
-     * - Insert the new contact and associate it with the address.
+     * - Insert the new contact and associate it with the address and user session.
      * <p>
-     * Returns an Optional<String>:
-     * - If a new contact or contact-address association is created, returns the ID of the contact-address association.
-     * - If no new contact or association is created, returns Optional.empty().
+     * Returns an Optional<ContactAddress>:
+     * - If a new contact or contact-address association is created, returns the ContactAddress entity.
+     * - If the contact already exists and is updated with the new session UUID, logs the update and returns Optional.empty().
      * <p>
      * Transactional: Rolls back if any operation fails.
+     * <p>
+     * This method ensures that returning users have their contact-address association refreshed with the latest session UUID.
      *
      * @param contactInfo  Contact information provided by the user.
-     * @return Optional<String> - ID of the new contact-address association if a new lead is generated, or Optional.empty() if no changes are made.
+     * @return Optional<ContactAddress> - The new or updated contact-address association if a new lead is generated or updated,
+     *                                   or Optional.empty() if no changes are made.
      */
     @Transactional
     public Optional<ContactAddress> processUserSessionData(ContactInfoDTO contactInfo) {
         String sessionUUID = contactInfo.getSessionUUID();
 
-        Optional<UserSession> optionalUserSession = userSessionDAO.findBySessionUUID(sessionUUID);
-        if (optionalUserSession.isEmpty()) {
+        Optional<UserSession> optUserSession = userSessionDAO.findBySessionUUID(sessionUUID);
+        if (optUserSession.isEmpty()) {
             // Add error logging here before return
             return Optional.empty();
         }
 
-        Optional<Address> optionalAddress = addressDAO.findById(optionalUserSession.get().getAddressId());
-        if (optionalAddress.isEmpty()) {
+        Optional<Address> optAddress = addressDAO.findById(optUserSession.get().getAddressId());
+        if (optAddress.isEmpty()) {
             // Add error logging here before return
             return Optional.empty();
         }
 
-        Optional<Contact> optionalContact = contactDAO.findByEmail(contactInfo.getEmail());
-        if (optionalContact.isEmpty()) {
+        Optional<Contact> optContact = contactDAO.findByEmail(contactInfo.getEmail());
+        if (optContact.isEmpty()) {
             Contact contact = new Contact(contactInfo);
             contactDAO.insert(contact);
             // Add info logging for new contact here.
-            ContactAddress contactAddress = new ContactAddress(contact, optionalAddress.get());
+            ContactAddress contactAddress = new ContactAddress(contact, optAddress.get(), optUserSession.get());
             contactAddressDAO.insert(contactAddress);
             return Optional.of(contactAddress);
             // Add info logging for new contact_address association here
         } else {
-            Optional<ContactAddress> optionalContactAddress =
-                    contactAddressDAO.findByAddressAndContact(optionalAddress.get().getId(), optionalContact.get().getId());
-            if (optionalContactAddress.isEmpty()) {
-                ContactAddress contactAddress = new ContactAddress(optionalContact.get(), optionalAddress.get());
+            Optional<ContactAddress> optContactAddress =
+                    contactAddressDAO.findByAddressAndContact(optAddress.get().getId(), optContact.get().getId());
+            if (optContactAddress.isEmpty()) {
+                ContactAddress contactAddress = new ContactAddress(optContact.get(), optAddress.get(), optUserSession.get());
                 contactAddressDAO.insert(contactAddress);
                 return Optional.of(contactAddress);
                 // Add info logging for new contact_address association here
             } else {
                 // Add info logging here to notify system user has returned
-                System.out.println("Existing User Returning...");
+                ContactAddress contactAddress = optContactAddress.get();
+                contactAddress.refreshLastUserSession(optUserSession.get());
+                contactAddress = contactAddressDAO.update(contactAddress);
+                System.out.println("Existing Lead. Lead updated with current user session: " + contactAddress);
             }
         }
 
