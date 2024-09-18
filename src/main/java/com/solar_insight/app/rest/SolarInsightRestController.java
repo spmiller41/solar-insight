@@ -110,7 +110,7 @@ public class SolarInsightRestController {
     @PostMapping("/address_confirm")
     public void addressConfirmController(@RequestBody UserSessionDTO userSessionDTO) {
         System.out.println("User Session UUID on Address Confirm: " + userSessionDTO.getSessionUUID());
-        // zohoIntegrationService.sendAddressAndEstimate(userSessionDTO);
+        zohoIntegrationService.sendAddressAndEstimate(userSessionDTO);
     }
 
 
@@ -134,7 +134,7 @@ public class SolarInsightRestController {
     @PostMapping("/contact_info")
     public Map<String, String> contactInfoController(@RequestBody ContactInfoDTO contactInfo) {
         Optional<ContactAddress> optGeneratedLead = sessionDataService.processUserSessionData(contactInfo);
-        // optGeneratedLead.ifPresent(zohoIntegrationService::addContactToEstimate); // Send to Zoho
+        optGeneratedLead.ifPresent(zohoIntegrationService::addContactToEstimate); // Send to Zoho
 
         Map<String, String> response = new HashMap<>();
         response.put("bookingPageQueryUrl", bookingUrlService.buildQueryUrl(contactInfo.getSessionUUID()));
@@ -148,8 +148,9 @@ public class SolarInsightRestController {
     public void bookedConsultationsController(@RequestBody BookingDTO bookingData) {
         System.out.println("Booking Data: " + bookingData);
         Optional<BookedConsultation> optBookedConsultation = sessionDataService.processUserSessionData(bookingData);
-        optBookedConsultation.ifPresent(booking -> System.out.println("Booking Created: " + booking));
+        optBookedConsultation.ifPresent(zohoIntegrationService::addBookingToEstimate);
     }
+
 
 
 

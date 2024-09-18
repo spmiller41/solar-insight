@@ -1,9 +1,6 @@
 package com.solar_insight.app.zoho_crm.service;
 
-import com.solar_insight.app.dao.AddressDAO;
-import com.solar_insight.app.dao.ContactDAO;
-import com.solar_insight.app.dao.SolarEstimateDAO;
-import com.solar_insight.app.dao.UserSessionDAO;
+import com.solar_insight.app.dao.*;
 import com.solar_insight.app.dto.UserSessionDTO;
 import com.solar_insight.app.entity.*;
 import jakarta.transaction.Transactional;
@@ -18,17 +15,24 @@ public class ZohoIntegrationService {
     private final UserSessionDAO userSessionDAO;
     private final AddressDAO addressDAO;
     private final SolarEstimateDAO estimateDAO;
-    private final ZohoRequestService solarInsightService;
+    private final ZohoRequestService zohoRequestService;
     private final ContactDAO contactDAO;
+    private final ContactAddressDAO contactAddressDAO;
 
     @Autowired
-    public ZohoIntegrationService(UserSessionDAO userSessionDAO, AddressDAO addressDAO,
-                                  SolarEstimateDAO estimateDAO, ZohoRequestService solarInsightService, ContactDAO contactDAO) {
+    public ZohoIntegrationService(UserSessionDAO userSessionDAO,
+                                  AddressDAO addressDAO,
+                                  SolarEstimateDAO estimateDAO,
+                                  ZohoRequestService zohoRequestService,
+                                  ContactDAO contactDAO,
+                                  ContactAddressDAO contactAddressDAO) {
+
         this.userSessionDAO = userSessionDAO;
         this.addressDAO = addressDAO;
         this.estimateDAO = estimateDAO;
-        this.solarInsightService = solarInsightService;
+        this.zohoRequestService = zohoRequestService;
         this.contactDAO = contactDAO;
+        this.contactAddressDAO = contactAddressDAO;
     }
 
     @Transactional
@@ -55,7 +59,7 @@ public class ZohoIntegrationService {
                     SolarEstimate solarEstimate = optSolarEstimate.get();
 
                     // Send address, estimate, and session uuid to Zoho CRM.
-                    Optional<String> optZohoRecordId = solarInsightService
+                    Optional<String> optZohoRecordId = zohoRequestService
                             .createSolarInsightLead(address, solarEstimate, userSession.getSessionUUID());
 
                     // Update this address with the returned record id from Zoho.
@@ -84,7 +88,34 @@ public class ZohoIntegrationService {
             return;
         }
 
-        solarInsightService.updateSolarInsightLead(optContact.get(), optAddress.get());
+        try {
+            zohoRequestService.updateSolarInsightLead(optContact.get(), optAddress.get());
+        } catch (IllegalArgumentException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    @Transactional
+    public void addBookingToEstimate(BookedConsultation bookedConsultation) {
+        Optional<ContactAddress> optContactAddress = contactAddressDAO.findById(bookedConsultation.getContactAddressId());
+        if (optContactAddress.isEmpty()) {
+            System.err.println("Could not locate ContactAddress while " +
+                    "attempting to update Zoho with booking data. Booking Data: " + bookedConsultation);
+            return;
+        }
+
+        Optional<Address> optAddress = addressDAO.findById(optContactAddress.get().getAddressId());
+        if (optAddress.isEmpty()) {
+            System.err.println("Could not locate Address while attempting to update " +
+                    "Zoho with booking data. Generated Lead Data: " + optContactAddress.get());
+            return;
+        }
+
+        try {
+            zohoRequestService.updateSolarInsightLead(bookedConsultation, optAddress.get());
+        } catch (IllegalArgumentException ex) {
+            System.err.println(ex.getMessage());
+        }
     }
 
 }

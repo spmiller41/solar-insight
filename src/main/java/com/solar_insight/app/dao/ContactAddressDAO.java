@@ -50,4 +50,16 @@ public class ContactAddressDAO {
         }
     }
 
+    public Optional<ContactAddress> findById(int contactAddressId) {
+        String query = "SELECT ca FROM ContactAddress ca WHERE ca.id = :contactAddressId";
+
+        try {
+            return Optional.of(entityManager.createQuery(query, ContactAddress.class)
+                    .setParameter("contactAddressId", contactAddressId)
+                    .getSingleResult());
+        } catch (Exception ex) {
+            return Optional.empty();
+        }
+    }
+
 }

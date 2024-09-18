@@ -211,8 +211,13 @@ public class SessionDataService {
         }
 
         BookedConsultation bookedConsultation = new BookedConsultation(bookingData, optContactAddress.get());
-        bookedConsultationDAO.insert(bookedConsultation);
-        return Optional.of(bookedConsultation);
+        try {
+            bookedConsultationDAO.insert(bookedConsultation);
+            return Optional.of(bookedConsultation);
+        } catch (Exception ex) {
+            System.out.println("Issue inserting booking: " + ex.getMessage());
+            return Optional.empty();
+        }
     }
 
 

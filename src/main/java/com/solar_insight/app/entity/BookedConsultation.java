@@ -2,9 +2,7 @@ package com.solar_insight.app.entity;
 
 import com.solar_insight.app.dto.BookingDTO;
 import jakarta.persistence.*;
-import org.springframework.cglib.core.Local;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -29,7 +27,7 @@ public class BookedConsultation {
     private LocalDateTime createdAt;
 
     @Column(name = "contact_address_id")
-    private int contact_address_id;
+    private int contactAddressId;
 
     public BookedConsultation() {}
 
@@ -38,12 +36,12 @@ public class BookedConsultation {
         this.appointmentType = bookingData.getAppointmentType();
         this.email = bookingData.getEmail();
         this.createdAt = LocalDateTime.now();
-        this.contact_address_id = contactAddress.getId();
+        this.contactAddressId = contactAddress.getId();
     }
 
-    public int getContact_address_id() { return contact_address_id; }
+    public int getContactAddressId() { return contactAddressId; }
 
-    public void setContact_address_id(int contact_address_id) { this.contact_address_id = contact_address_id; }
+    public void setContactAddressId(int contactAddressId) { this.contactAddressId = contactAddressId; }
 
     public String getEmail() { return email; }
 
@@ -72,7 +70,7 @@ public class BookedConsultation {
                 ", appointmentDateTime=" + appointmentDateTime +
                 ", appointmentType='" + appointmentType + '\'' +
                 ", email='" + email + '\'' +
-                ", contact_address_id=" + contact_address_id +
+                ", contact_address_id=" + contactAddressId +
                 '}';
     }
 

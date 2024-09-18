@@ -1,12 +1,10 @@
 package com.solar_insight.app.zoho_crm.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.GeocodedLocation;
-import com.solar_insight.app.entity.Address;
-import com.solar_insight.app.entity.Contact;
-import com.solar_insight.app.entity.ContactAddress;
-import com.solar_insight.app.entity.SolarEstimate;
+import com.solar_insight.app.entity.*;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleAccess;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleApiName;
@@ -21,6 +19,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,11 @@ public class ZohoRequestService {
 
 
 
-    public void updateSolarInsightLead(Contact contact, Address address) {
+
+    public void updateSolarInsightLead(Object object, Address address) throws IllegalArgumentException {
+        if (!(object instanceof Contact || object instanceof BookedConsultation))
+            throw new IllegalArgumentException("Object must be either a Contact or a BookedConsultation.");
+
         String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
         String crmRecordId = address.getZohoSolarInsightLeadId();
         String endpoint = baseUrl + ZohoModuleApiName.SOLAR_INSIGHT_LEADS + "/" + crmRecordId;
@@ -98,39 +103,65 @@ public class ZohoRequestService {
         headers.setBearerAuth(accessToken);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonPayload = null;
-        try {
-            jsonPayload = objectMapper.writeValueAsString(createPayload(contact, address));
-        } catch (Exception ex) {
-            // Add more organized error logging here
-            System.err.println(ex.getMessage());
-        }
+        String jsonPayload;
 
-        HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
         try {
-            ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, String.class);
-            if (response.getStatusCode().is2xxSuccessful()) {
-                // Add organized info logging here
-                System.out.println("Solar Insight Lead updated successfully with contact information.");
+            if (object instanceof Contact contact) {
+                jsonPayload = objectMapper.writeValueAsString(createPayload(contact));
             } else {
-                // Add organized error logging here
-                System.err.println("Failed to update Solar Insight Lead with contact information.");
+                BookedConsultation bookedConsultation = (BookedConsultation) object;
+                jsonPayload = objectMapper.writeValueAsString(createPayload(bookedConsultation));
             }
         } catch (Exception ex) {
-            // Add organized error logging here
-            System.err.println("Exception Message: " + ex.getMessage());
+            // Add organized error logging here (SLF4J)
+            System.err.println("Exception during payload creation: " + ex.getMessage());
+            return; // Early return if payload creation failed
+        }
+
+        if (jsonPayload != null) {
+            HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
+            try {
+                ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, String.class);
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    // Add organized info logging here
+                    System.out.println("Solar Insight Lead Updated Successfully");
+                } else {
+                    // Add organized error logging here
+                    System.err.println("Failed to update Solar Insight Lead. Status code: " + response.getStatusCode());
+                }
+            } catch (Exception ex) {
+                // Consider logging with a proper logging framework
+                System.err.println("Exception during API call: " + ex.getMessage());
+            }
+        } else {
+            System.err.println("JsonPayload is null, skipping API call.");
         }
     }
 
 
 
 
-    private Map<String, Object> createPayload(Contact contact, Address address) {
+    private Map<String, Object> createPayload(Contact contact) {
         Map<String, Object> body = new HashMap<>();
         body.put("First_Name", contact.getFirstName());
         body.put("Last_Name", contact.getLastName());
         body.put("Email", contact.getEmail());
         body.put("Phone", contact.getPhone());
+
+        // Wrap the record inside a "data" key, as Zoho expects an array of records
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("data", List.of(body));
+
+        return payload;
+    }
+
+
+
+
+    private Map<String, Object> createPayload(BookedConsultation bookedConsultation) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("Appointment_Date_Time", formatDateTimeForZoho(bookedConsultation.getAppointmentDateTime()));
+        body.put("Appointment_Type", bookedConsultation.getAppointmentType());
 
         // Wrap the record inside a "data" key, as Zoho expects an array of records
         Map<String, Object> payload = new HashMap<>();
@@ -222,6 +253,20 @@ public class ZohoRequestService {
             System.err.println("Exception while uploading image: " + ex.getMessage());
             return Optional.empty();
         }
+    }
+
+
+
+
+    /*
+     * Formats the given LocalDateTime into a Zoho-compatible date-time string.
+     *
+     * @param dateTime The LocalDateTime object to be formatted.
+     * @return A string formatted for Zoho expected date-time format.
+     */
+    private String formatDateTimeForZoho(LocalDateTime dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+        return dateTime.atZone(ZoneId.of("America/New_York")).format(formatter);
     }
 
 
