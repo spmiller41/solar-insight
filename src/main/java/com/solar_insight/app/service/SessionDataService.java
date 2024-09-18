@@ -1,6 +1,7 @@
 package com.solar_insight.app.service;
 
 import com.solar_insight.app.dao.*;
+import com.solar_insight.app.dto.BookingDTO;
 import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.entity.*;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
@@ -29,15 +30,22 @@ public class SessionDataService {
     private final SolarEstimateDAO solarEstimateDAO;
     private final ContactDAO contactDAO;
     private final ContactAddressDAO contactAddressDAO;
+    private final BookedConsultationDAO bookedConsultationDAO;
 
     @Autowired
-    public SessionDataService(AddressDAO addressDAO, UserSessionDAO userSessionDAO,
-                              SolarEstimateDAO solarEstimateDAO, ContactDAO contactDAO, ContactAddressDAO contactAddressDAO) {
+    public SessionDataService(AddressDAO addressDAO,
+                              UserSessionDAO userSessionDAO,
+                              SolarEstimateDAO solarEstimateDAO,
+                              ContactDAO contactDAO,
+                              ContactAddressDAO contactAddressDAO,
+                              BookedConsultationDAO bookedConsultationDAO) {
+
         this.addressDAO = addressDAO;
         this.userSessionDAO = userSessionDAO;
         this.solarEstimateDAO = solarEstimateDAO;
         this.contactDAO = contactDAO;
         this.contactAddressDAO = contactAddressDAO;
+        this.bookedConsultationDAO = bookedConsultationDAO;
     }
 
 
@@ -182,6 +190,29 @@ public class SessionDataService {
         }
 
         return Optional.empty();
+    }
+
+
+
+    @Transactional
+    public Optional<BookedConsultation> processUserSessionData(BookingDTO bookingData) {
+        Optional<UserSession> optUserSession = userSessionDAO.findBySessionUUID(bookingData.getSessionUUID());
+        if (optUserSession.isEmpty()) {
+            System.err.println("Could not locate User Session when fetching " +
+                    "data during a booked consultation. Booking Data: " + bookingData);
+            return Optional.empty();
+        }
+
+        Optional<ContactAddress> optContactAddress = contactAddressDAO.findByUserSession(optUserSession.get());
+        if (optContactAddress.isEmpty()) {
+            System.err.println("Could not locate ContactAddress (Generated Lead) when fetching " +
+                    "data during a booked consultation. User Session: " + optUserSession.get());
+            return Optional.empty();
+        }
+
+        BookedConsultation bookedConsultation = new BookedConsultation(bookingData, optContactAddress.get());
+        bookedConsultationDAO.insert(bookedConsultation);
+        return Optional.of(bookedConsultation);
     }
 
 
