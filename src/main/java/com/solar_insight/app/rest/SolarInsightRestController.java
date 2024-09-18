@@ -2,9 +2,11 @@ package com.solar_insight.app.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.GeocodedLocation;
+import com.solar_insight.app.dto.BookingDTO;
 import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
 import com.solar_insight.app.dto.UserSessionDTO;
+import com.solar_insight.app.entity.BookedConsultation;
 import com.solar_insight.app.entity.ContactAddress;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
@@ -108,7 +110,7 @@ public class SolarInsightRestController {
     @PostMapping("/address_confirm")
     public void addressConfirmController(@RequestBody UserSessionDTO userSessionDTO) {
         System.out.println("User Session UUID on Address Confirm: " + userSessionDTO.getSessionUUID());
-        zohoIntegrationService.sendAddressAndEstimate(userSessionDTO);
+        // zohoIntegrationService.sendAddressAndEstimate(userSessionDTO);
     }
 
 
@@ -120,7 +122,7 @@ public class SolarInsightRestController {
      * If the lead is new (generated for the first time), it will be returned by processUserSessionData,
      * and a record will be created in the database and in Zoho CRM with the contact details.
      * <p>
-     * If no lead is returned (Optional.empty()), this should indicate the user is an existing lead,
+     * If no lead is returned (Optional.empty()), this *should* indicate the user is an existing lead,
      * and only the current User Session will be updated in the database (no need to update Zoho CRM as the contact already exists).
      * <p>
      * Regardless of whether the lead is new or existing, a booking query URL is generated
@@ -132,13 +134,22 @@ public class SolarInsightRestController {
     @PostMapping("/contact_info")
     public Map<String, String> contactInfoController(@RequestBody ContactInfoDTO contactInfo) {
         Optional<ContactAddress> optGeneratedLead = sessionDataService.processUserSessionData(contactInfo);
-        optGeneratedLead.ifPresent(zohoIntegrationService::addContactToEstimate); // Send to Zoho
+        // optGeneratedLead.ifPresent(zohoIntegrationService::addContactToEstimate); // Send to Zoho
 
         Map<String, String> response = new HashMap<>();
         response.put("bookingPageQueryUrl", bookingUrlService.buildQueryUrl(contactInfo.getSessionUUID()));
         return response; // Return query URL
     }
 
+
+
+
+    @PostMapping("/booked_consultation")
+    public void bookedConsultationsController(@RequestBody BookingDTO bookingData) {
+        System.out.println("Booking Data: " + bookingData);
+        Optional<BookedConsultation> optBookedConsultation = sessionDataService.processUserSessionData(bookingData);
+        optBookedConsultation.ifPresent(booking -> System.out.println("Booking Created: " + booking));
+    }
 
 
 
