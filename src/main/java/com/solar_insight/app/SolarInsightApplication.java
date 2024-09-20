@@ -29,7 +29,6 @@ public class SolarInsightApplication {
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
-
 			ContactAddress contactAddress = new ContactAddress();
 			contactAddress.setAddressId(1);
 			contactAddress.setContactId(1);
@@ -38,8 +37,8 @@ public class SolarInsightApplication {
 			String sessionUUID= "01112ea8-1056-45cf-8012-6c312aff7d82";
 
 			String queryUrl = bookingUrlService.buildQueryUrl(contactAddress, sessionUUID);
-			System.out.println("Booking Query URL: " + queryUrl);
-
+			System.out.
+			println("Booking Query URL: " + queryUrl);
 		};
 
 	}
