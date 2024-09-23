@@ -47,8 +47,9 @@ public class ContactInfoDTO {
         return phone;
     }
 
+    // Remove all non-digit characters from the phone number
     public void setPhone(String phone) {
-        this.phone = phone;
+        this.phone = phone.replaceAll("\\D", "");
     }
 
     public String getSessionUUID() { return sessionUUID; }
