@@ -3,7 +3,10 @@ package com.solar_insight.app.zoho_crm.service;
 import com.solar_insight.app.dao.*;
 import com.solar_insight.app.dto.UserSessionDTO;
 import com.solar_insight.app.entity.*;
+import com.solar_insight.app.zoho_crm.logs.ZohoIntegrationLogger;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +14,8 @@ import java.util.Optional;
 
 @Service
 public class ZohoIntegrationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ZohoIntegrationService.class);
 
     private final UserSessionDAO userSessionDAO;
     private final AddressDAO addressDAO;
@@ -35,47 +40,52 @@ public class ZohoIntegrationService {
         this.contactAddressDAO = contactAddressDAO;
     }
 
+
+
+
     @Transactional
     public void sendAddressAndEstimate(UserSessionDTO userSessionDTO) {
-        // Find user session, make sure it's present.
         Optional<UserSession> optUserSession = userSessionDAO.findBySessionUUID(userSessionDTO.getSessionUUID());
-        if (optUserSession.isPresent()) {
-            UserSession userSession = optUserSession.get();
+        if (optUserSession.isEmpty()) {
+            ZohoIntegrationLogger.logUserSessionNotFoundErr(userSessionDTO, logger);
+            return;
+        }
 
-            // Find address, make sure it's present.
-            Optional<Address> optAddress = addressDAO.findById(userSession.getAddressId());
-            if (optAddress.isPresent()) {
-                Address address = optAddress.get();
+        Optional<Address> optAddress = addressDAO.findById(optUserSession.get().getAddressId());
+        if (optAddress.isEmpty()) {
+            ZohoIntegrationLogger.logAddressNotFoundErr(optUserSession.get(), logger);
+            return;
+        }
 
-                // If the address has already been added to Zoho, return.
-                if (address.getZohoSolarInsightLeadId() != null) {
-                    // Add organized info logging here
-                    return;
-                }
+        // If the address has already been added to Zoho, return.
+        if (optAddress.get().getZohoSolarInsightLeadId() != null) {
+            ZohoIntegrationLogger.logExistingUserInfo(optAddress.get(), logger);
+            return;
+        }
 
-                // Find solar estimate, make sure it's present.
-                Optional<SolarEstimate> optSolarEstimate = estimateDAO.findByAddressId(address.getId());
-                if (optSolarEstimate.isPresent()) {
-                    SolarEstimate solarEstimate = optSolarEstimate.get();
+        Optional<SolarEstimate> optSolarEstimate = estimateDAO.findByAddressId(optAddress.get().getId());
+        if (optSolarEstimate.isEmpty()) {
+            ZohoIntegrationLogger.logSolarEstimateNotFoundErr(optAddress.get(), logger);
+            return;
+        }
 
-                    // Send address, estimate, and session uuid to Zoho CRM.
-                    Optional<String> optZohoRecordId = zohoRequestService
-                            .createSolarInsightLead(address, solarEstimate, userSession.getSessionUUID());
+        // Send address, estimate, and session uuid to Zoho CRM.
+        Optional<String> optZohoRecordId = zohoRequestService
+                .createSolarInsightLead(optAddress.get(), optSolarEstimate.get(), optUserSession.get().getSessionUUID());
 
-                    // Update this address with the returned record id from Zoho.
-                    if (optZohoRecordId.isPresent()) {
-                        address.setZohoSolarInsightLeadId(optZohoRecordId.get());
-                        address = addressDAO.update(address);
-                        System.out.println("The address was updated with the Zoho Record Id: " + address.getZohoSolarInsightLeadId());
-                        // Add info logging here
-                    } else {
-                        // Add more organized error logging here
-                        System.err.println("There was an issue retrieving and updating the address with the Zoho Record Id.");
-                    }
-                }
-            }
+        // Update this address with the returned record id from Zoho.
+        if (optZohoRecordId.isPresent()) {
+            Address address = optAddress.get();
+            address.setZohoSolarInsightLeadId(optZohoRecordId.get());
+            address = addressDAO.update(address);
+            ZohoIntegrationLogger.logSuccessfulPostInfo(address.getZohoSolarInsightLeadId(), logger);
+        } else {
+            ZohoIntegrationLogger.logZohoRecordCreationErr(optSolarEstimate.get(), logger);
         }
     }
+
+
+
 
     @Transactional
     public void addContactToEstimate(ContactAddress contactAddress) {
@@ -83,36 +93,38 @@ public class ZohoIntegrationService {
         Optional<Address> optAddress = addressDAO.findById(contactAddress.getAddressId());
 
         if (optContact.isEmpty() || optAddress.isEmpty()) {
-            // Add organized error logging here
-            System.err.println("One or more records could not be found for this generated lead.");
+            ZohoIntegrationLogger.logMissingLeadDataErr(contactAddress, logger);
             return;
         }
 
         try {
             zohoRequestService.updateSolarInsightLead(optContact.get(), optAddress.get());
+            ZohoIntegrationLogger.logContactUpdateSuccessInfo(optAddress.get().getZohoSolarInsightLeadId(), logger);
         } catch (IllegalArgumentException ex) {
             System.out.println(ex.getMessage());
         }
     }
 
+
+
+
     @Transactional
     public void addBookingToEstimate(BookedConsultation bookedConsultation) {
         Optional<ContactAddress> optContactAddress = contactAddressDAO.findById(bookedConsultation.getContactAddressId());
         if (optContactAddress.isEmpty()) {
-            System.err.println("Could not locate ContactAddress while " +
-                    "attempting to update Zoho with booking data. Booking Data: " + bookedConsultation);
+            ZohoIntegrationLogger.logContactAddressNotFoundErr(bookedConsultation, logger);
             return;
         }
 
         Optional<Address> optAddress = addressDAO.findById(optContactAddress.get().getAddressId());
         if (optAddress.isEmpty()) {
-            System.err.println("Could not locate Address while attempting to update " +
-                    "Zoho with booking data. Generated Lead Data: " + optContactAddress.get());
+            ZohoIntegrationLogger.logAddressNotFoundErr(optContactAddress.get(), logger);
             return;
         }
 
         try {
             zohoRequestService.updateSolarInsightLead(bookedConsultation, optAddress.get());
+            ZohoIntegrationLogger.logBookingUpdateSuccessInfo(optAddress.get().getZohoSolarInsightLeadId(), logger);
         } catch (IllegalArgumentException ex) {
             System.err.println(ex.getMessage());
         }
