@@ -2,12 +2,11 @@ package com.solar_insight.app.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.GeocodedLocation;
-import com.solar_insight.app.dto.BookingDTO;
-import com.solar_insight.app.dto.ContactInfoDTO;
-import com.solar_insight.app.dto.PreliminaryDataDTO;
-import com.solar_insight.app.dto.UserSessionDTO;
+import com.solar_insight.app.dto.*;
 import com.solar_insight.app.entity.BookedConsultation;
 import com.solar_insight.app.entity.ContactAddress;
+import com.solar_insight.app.entity.InMarketZip;
+import com.solar_insight.app.service.MarketDataService;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
 import com.solar_insight.app.google_solar.service.SolarBuildingInsightService;
@@ -17,6 +16,8 @@ import com.solar_insight.app.ycbm.service.BookingUrlService;
 import com.solar_insight.app.zoho_crm.service.ZohoIntegrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.NumberFormat;
@@ -34,19 +35,22 @@ public class SolarInsightRestController {
     private final SessionDataService sessionDataService;
     private final ZohoIntegrationService zohoIntegrationService;
     private final BookingUrlService bookingUrlService;
+    private final MarketDataService marketDataService;
 
     @Autowired
     public SolarInsightRestController(SolarBuildingInsightService solarBuildingInsightService,
                                       SatelliteImageService imageService,
                                       SessionDataService sessionDataService,
                                       ZohoIntegrationService zohoIntegrationService,
-                                      BookingUrlService bookingUrlService) {
+                                      BookingUrlService bookingUrlService,
+                                      MarketDataService marketDataService) {
 
         this.solarBuildingInsightService = solarBuildingInsightService;
         this.imageService = imageService;
         this.sessionDataService = sessionDataService;
         this.zohoIntegrationService = zohoIntegrationService;
         this.bookingUrlService = bookingUrlService;
+        this.marketDataService = marketDataService;
     }
 
 
@@ -149,6 +153,42 @@ public class SolarInsightRestController {
         System.out.println("Booking Data: " + bookingData);
         Optional<BookedConsultation> optBookedConsultation = sessionDataService.processUserSessionData(bookingData);
         optBookedConsultation.ifPresent(zohoIntegrationService::addBookingToEstimate);
+    }
+
+
+
+
+    @PostMapping("/market_check")
+    public ResponseEntity<MarketCheckResponseDTO> marketCheckController(@RequestBody InMarketZipDTO zipDTO) {
+        System.out.println("Zip DTO: " + zipDTO);
+
+        try {
+            Optional<InMarketZip> optMarketData = marketDataService.findMarketInfoByZip(zipDTO);
+
+            MarketCheckResponseDTO responseDTO = new MarketCheckResponseDTO();
+
+            if (optMarketData.isPresent()) {
+                responseDTO.setStatus("success");
+                responseDTO.setMessage("in_market");
+                responseDTO.setCounty(optMarketData.get().getCounty());
+            } else {
+                responseDTO.setStatus("success");
+                responseDTO.setMessage("out_of_market");
+                responseDTO.setCounty(null);
+            }
+
+            return ResponseEntity.ok(responseDTO); // HTTP 200
+
+        } catch (Exception e) {
+            // Optional: log the error here
+            System.out.println(e.getMessage());
+            MarketCheckResponseDTO errorResponse = new MarketCheckResponseDTO();
+            errorResponse.setStatus("error");
+            errorResponse.setMessage("internal_server_error");
+            errorResponse.setCounty(null);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse); // HTTP 500
+        }
     }
 
 
