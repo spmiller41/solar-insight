@@ -160,7 +160,15 @@ public class SolarInsightRestController {
 
     @PostMapping("/market_check")
     public ResponseEntity<MarketCheckResponseDTO> marketCheckController(@RequestBody InMarketZipDTO zipDTO) {
-        System.out.println("Zip DTO: " + zipDTO);
+        // Check if the zipDTO is null or if the zip field is null (invalid key or missing key)
+        if (zipDTO == null || zipDTO.getZip() == null) {
+            MarketCheckResponseDTO errorResponse = new MarketCheckResponseDTO();
+            errorResponse.setStatus("error");
+            errorResponse.setMessage("missing_or_invalid_zip");
+            errorResponse.setCounty(null);
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse); // HTTP 400
+        }
 
         try {
             Optional<InMarketZip> optMarketData = marketDataService.findMarketInfoByZip(zipDTO);
