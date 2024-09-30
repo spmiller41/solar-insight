@@ -4,7 +4,7 @@ import com.solar_insight.app.dto.UserSessionDTO;
 import com.solar_insight.app.entity.*;
 import org.slf4j.Logger;
 
-public class ZohoIntegrationLogger {
+public class IntegrationLogger {
 
     public static void logExistingUserInfo(Address address, Logger logger) {
         logger.info("User with existing address/estimate in Zoho began new session. Address: {}", address);
@@ -50,6 +50,10 @@ public class ZohoIntegrationLogger {
 
     public static void logBookingUpdateSuccessInfo(String zohoRecordId, Logger logger) {
         logger.info("Booking Info added to Zoho record successfully. Zoho Record Id: {}", zohoRecordId);
+    }
+
+    public static void logIllegalArgumentException(Address address, Logger logger) {
+        logger.error("Illegal argument exception occurred while attempting to update Zoho record. Zoho Record Id: {}", address.getZohoSolarInsightLeadId());
     }
 
 }

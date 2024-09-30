@@ -2,6 +2,9 @@ package com.solar_insight.app.zoho_crm.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.zoho_crm.dto.ZohoTokenResponse;
+import com.solar_insight.app.zoho_crm.logs.TokenLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -33,6 +36,8 @@ import java.util.Map;
  */
 @Service
 public class TokenService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TokenService.class);
 
     @Value("${zoho.token.base.url}")
     private String baseUrl;
@@ -121,13 +126,12 @@ public class TokenService {
                 TokenDetails tokenDetails =
                         new TokenDetails(tokenResponse.getAccessToken(), Instant.now(), tokenResponse.getExpiresIn());
                 tokenStore.put(moduleType, tokenDetails);
+                TokenLogger.logSuccessfulTokenInfo(moduleType, logger);
             } else {
-                // Add more organized info logging here
-                System.err.println("Could not refresh access token for module: " + moduleType);
+                TokenLogger.logFailedTokenErr(moduleType, logger);
             }
         } catch (Exception ex) {
-            // Add more organized error logging here
-            System.err.println("Exception while refreshing token for module: " + moduleType + " - " + ex.getMessage());
+            TokenLogger.logTokenExceptionErr(moduleType, logger, ex);
         }
     }
 

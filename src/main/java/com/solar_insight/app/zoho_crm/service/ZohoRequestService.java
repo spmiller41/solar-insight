@@ -1,6 +1,5 @@
 package com.solar_insight.app.zoho_crm.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.GeocodedLocation;
@@ -8,6 +7,9 @@ import com.solar_insight.app.entity.*;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleAccess;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleApiName;
+import com.solar_insight.app.zoho_crm.logs.RequestLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -29,6 +31,8 @@ import java.util.Optional;
 
 @Service
 public class ZohoRequestService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ZohoRequestService.class);
 
     @Value("${zoho.api.base.url}")
     private String baseUrl;
@@ -64,25 +68,27 @@ public class ZohoRequestService {
             System.err.println(ex.getMessage());
         }
 
-        HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
-            if (response.getStatusCode().is2xxSuccessful()) {
-                // Add more organized info logging here.
-                System.out.println("Solar Insight Lead created with address and estimate successfully.");
+        if (jsonPayload != null) {
+            HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
+            try {
+                ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    RequestLogger.logPostStatus(response, logger);
 
-                // Parse the Zoho Record Id from the response and return it if possible.
-                JsonNode jsonNode = objectMapper.readTree(response.getBody());
-                String recordId = jsonNode.path("data").get(0).path("details").path("id").asText();
-                return Optional.of(recordId);
-            } else {
-                // Add more organized error logging here.
-                System.err.println("Failed to create lead with address and estimate.");
+                    // Parse the Zoho Record Id from the response and return it if possible.
+                    JsonNode jsonNode = objectMapper.readTree(response.getBody());
+                    String recordId = jsonNode.path("data").get(0).path("details").path("id").asText();
+                    return Optional.of(recordId);
+                } else {
+                    RequestLogger.logPostStatus(response, logger);
+                    return Optional.empty();
+                }
+            } catch (Exception ex) {
+                RequestLogger.logExceptionMsg(solarEstimate, logger, ex);
                 return Optional.empty();
             }
-        } catch (Exception ex) {
-            // Add organized error logging here
-            System.err.println("Exception Message: " + ex.getMessage());
+        } else {
+            RequestLogger.logEmptyPayloadErr(logger);
             return Optional.empty();
         }
     }
@@ -113,28 +119,20 @@ public class ZohoRequestService {
                 jsonPayload = objectMapper.writeValueAsString(createPayload(bookedConsultation));
             }
         } catch (Exception ex) {
-            // Add organized error logging here (SLF4J)
-            System.err.println("Exception during payload creation: " + ex.getMessage());
-            return; // Early return if payload creation failed
+            RequestLogger.logPayloadCreateErr(object, logger, ex);
+            return;
         }
 
         if (jsonPayload != null) {
             HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
             try {
                 ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, String.class);
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    // Add organized info logging here
-                    System.out.println("Solar Insight Lead Updated Successfully");
-                } else {
-                    // Add organized error logging here
-                    System.err.println("Failed to update Solar Insight Lead. Status code: " + response.getStatusCode());
-                }
+                RequestLogger.logPutStatus(response, logger);
             } catch (Exception ex) {
-                // Consider logging with a proper logging framework
-                System.err.println("Exception during API call: " + ex.getMessage());
+                RequestLogger.logExceptionMsg(address, logger, ex);
             }
         } else {
-            System.err.println("JsonPayload is null, skipping API call.");
+            RequestLogger.logEmptyPayloadErr(logger);
         }
     }
 
@@ -242,15 +240,14 @@ public class ZohoRequestService {
             if (response.getStatusCode().is2xxSuccessful()) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode rootNode = objectMapper.readTree(response.getBody());
+                RequestLogger.logImageUploadStatus(response, logger);
                 return Optional.of(rootNode.path("data").get(0).path("details").path("id").asText());
             } else {
-                // Add more organized error logging here.
-                System.err.println("Failed to upload image to Zoho: " + response.getBody());
+                RequestLogger.logImageUploadStatus(response, logger);
                 return Optional.empty();
             }
         } catch (Exception ex) {
-            // Add more organized error logging here.
-            System.err.println("Exception while uploading image: " + ex.getMessage());
+            RequestLogger.logImgExceptionMsg(logger, ex);
             return Optional.empty();
         }
     }

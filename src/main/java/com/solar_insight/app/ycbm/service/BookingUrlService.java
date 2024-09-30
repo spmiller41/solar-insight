@@ -9,7 +9,10 @@ import com.solar_insight.app.entity.Contact;
 import com.solar_insight.app.entity.ContactAddress;
 import com.solar_insight.app.entity.UserSession;
 import com.solar_insight.app.ycbm.BookingUrlBuilder;
+import com.solar_insight.app.ycbm.logs.UrlServiceLogger;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,8 @@ import java.util.Optional;
 
 @Service
 public class BookingUrlService {
+
+    private static final Logger logger = LoggerFactory.getLogger(BookingUrlService.class);
 
     @Value("${booking.page.base.url}")
     private String baseUrl;
@@ -44,15 +49,13 @@ public class BookingUrlService {
 
         Optional<UserSession> optUserSession = userSessionDAO.findBySessionUUID(sessionUUID);
         if (optUserSession.isEmpty()) {
-            System.err.println("User Session could not be located based on the " +
-                    "Session UUID when attempting to create booking query url. Session UUID: " + sessionUUID);
+            UrlServiceLogger.logMissingUserSessionErr(sessionUUID, logger);
             return baseUrl;
         }
 
         Optional<ContactAddress> optGeneratedLead = contactAddressDAO.findByUserSession(optUserSession.get());
         if (optGeneratedLead.isEmpty()) {
-            System.err.println("ContactAddress (Generated Lead) could not be located based on the " +
-                    "User Session when attempting to create booking query url. User Session: " + optUserSession.get());
+            UrlServiceLogger.logMissingLeadErr(optUserSession.get(), logger);
             return baseUrl;
         }
 
@@ -60,9 +63,7 @@ public class BookingUrlService {
         Optional<Contact> optContact = contactDAO.findById(optGeneratedLead.get().getContactId());
 
         if (optAddress.isEmpty() || optContact.isEmpty()) {
-            // Add more organized error logging here
-            System.err.println("Could not locate either the contact or address via the generated lead in " +
-                    "ContactAddress entity while attempting to created booking query url: " + optGeneratedLead.get());
+            UrlServiceLogger.logMissingLeadDataErr(optGeneratedLead.get(), logger);
             return baseUrl;
         }
 

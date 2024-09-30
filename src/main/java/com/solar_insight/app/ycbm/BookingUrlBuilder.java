@@ -1,13 +1,17 @@
 package com.solar_insight.app.ycbm;
 
-import com.solar_insight.app.entity.Address;
 import com.solar_insight.app.entity.Contact;
+import com.solar_insight.app.ycbm.logs.UrlBuildLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class BookingUrlBuilder {
+
+    private static final Logger logger = LoggerFactory.getLogger(BookingUrlBuilder.class);
 
     public Optional<String> generate(String baseUrl, Contact contact, String sessionUUID) {
         try {
@@ -16,8 +20,7 @@ public class BookingUrlBuilder {
                     encode(sessionUUID),
                     encode(contact.getEmail())));
         } catch (Exception ex) {
-            // Add more organized error logging here
-            System.err.print("There was an issue generating a Query URL: " + ex.getMessage());
+            UrlBuildLogger.logFailedUrlBuildErr(contact, sessionUUID, logger, ex);
             return Optional.empty();
         }
     }
