@@ -3,8 +3,8 @@ package com.solar_insight.app.google_solar.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solar_insight.app.logs.RestTemplateLog;
-import com.solar_insight.app.logs.SolarBuildingInsightLog;
+import com.solar_insight.app.logs.RestTemplateLogger;
+import com.solar_insight.app.logs.SolarBuildingInsightLogger;
 import com.solar_insight.app.GeocodedLocation;
 import com.solar_insight.app.google_solar.utility.SolarConsumptionAnalyzer;
 import com.solar_insight.app.google_solar.utility.SolarOutcomeAnalysis;
@@ -52,7 +52,7 @@ public class SolarBuildingInsightService {
         try {
             response = restTemplate.getForObject(requestURL, String.class);
         } catch (Exception ex) {
-            RestTemplateLog.requestError(SolarBuildingInsightService.class, ex, logger);
+            RestTemplateLogger.requestError(SolarBuildingInsightService.class, ex, logger);
             return null;
         }
 
@@ -60,7 +60,7 @@ public class SolarBuildingInsightService {
         try {
             jsonNode = objectMapper.readTree(response);
         } catch (JsonProcessingException ex) {
-            SolarBuildingInsightLog.parsingError(location, ex, logger);
+            SolarBuildingInsightLogger.parsingError(location, ex, logger);
             return null;
         }
 
