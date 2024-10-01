@@ -6,11 +6,13 @@ import com.solar_insight.app.dto.ContactInfoDTO;
 import com.solar_insight.app.entity.*;
 import com.solar_insight.app.dto.PreliminaryDataDTO;
 import com.solar_insight.app.google_solar.utility.SolarOutcomeAnalysis;
+import com.solar_insight.app.logs.SessionDataLogger;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +26,8 @@ import java.util.Optional;
  */
 @Service
 public class SessionDataService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SessionDataService.class);
 
     private final AddressDAO addressDAO;
     private final UserSessionDAO userSessionDAO;
@@ -83,10 +87,10 @@ public class SessionDataService {
 
         if (optionalAddress.isEmpty()) {
             if (optionalUserSession.isEmpty()) {
-                System.out.println("Address and User Session Empty. Creating User Session, Address, and Estimate.");
+                SessionDataLogger.logNewUserNotification(logger);
                 insertAllNewSessionData(data, analysis);
             } else {
-                System.out.println("Address is Empty, User Session Exists. Creating Address and Estimate. Associating Address.");
+                SessionDataLogger.logLiveSessionNewDataNotification(logger, optionalUserSession.get());
                 Address address = new Address(data);
                 addressDAO.insert(address);
 
@@ -97,20 +101,19 @@ public class SessionDataService {
             }
         } else {
             if (optionalUserSession.isEmpty()) {
-                System.out.println("Address Exists, User Session is Empty. Creating new User Session and associating Address.");
+                SessionDataLogger.logNewSessionExistingDataNotification(logger, optionalAddress.get());
                 UserSession userSession = new UserSession(data, optionalAddress.get(), sessionUUID);
                 userSessionDAO.insert(userSession); // Add info logging for new user session.
                 updateSolarEstimate(analysis, userSession);
             } else {
-                System.out.println("Address and User Session Exists. Checking to see if the last address associated is the same as the new one entered.");
+                SessionDataLogger.logLiveSessionAndAddressNotification(logger, optionalUserSession.get(), optionalAddress.get());
                 int sessionAddressId = optionalUserSession.get().getAddressId();
                 int newAddressId = optionalAddress.get().getId();
                 if (sessionAddressId == newAddressId) {
-                    System.out.println("The current User Session address is the same as the one received via endpoint, only updating Solar Estimate");
+                    SessionDataLogger.logLiveSessionAddressResult(logger, optionalUserSession.get(), false);
                     updateSolarEstimate(analysis, optionalUserSession.get());
                 } else {
-                    System.out.println("The current User Session address is different from the one received via endpoint, " +
-                            "we need to check if the current associated address exists in any other user session besides this one and manage it");
+                    SessionDataLogger.logLiveSessionAddressResult(logger, optionalUserSession.get(), true);
                     manageSessionAddressAssociation(optionalUserSession.get(), optionalAddress.get(), analysis);
                 }
             }
@@ -153,39 +156,40 @@ public class SessionDataService {
 
         Optional<UserSession> optUserSession = userSessionDAO.findBySessionUUID(sessionUUID);
         if (optUserSession.isEmpty()) {
-            // Add error logging here before return
+            SessionDataLogger.logMissingUserSessionErr(logger, contactInfo);
             return Optional.empty();
         }
 
         Optional<Address> optAddress = addressDAO.findById(optUserSession.get().getAddressId());
         if (optAddress.isEmpty()) {
-            // Add error logging here before return
+            SessionDataLogger.logMissingAddressErr(logger, optUserSession.get());
             return Optional.empty();
         }
 
         Optional<Contact> optContact = contactDAO.findByEmail(contactInfo.getEmail());
         if (optContact.isEmpty()) {
+            SessionDataLogger.logNewContactInfoNotification(logger, contactInfo);
             Contact contact = new Contact(contactInfo);
             contactDAO.insert(contact);
-            // Add info logging for new contact here.
+
+            SessionDataLogger.logGeneratingLeadNotification(logger, contact, optAddress.get());
             ContactAddress contactAddress = new ContactAddress(contact, optAddress.get(), optUserSession.get());
             contactAddressDAO.insert(contactAddress);
             return Optional.of(contactAddress);
-            // Add info logging for new contact_address association here
         } else {
             Optional<ContactAddress> optContactAddress =
                     contactAddressDAO.findByAddressAndContact(optAddress.get().getId(), optContact.get().getId());
             if (optContactAddress.isEmpty()) {
+                SessionDataLogger.logExistingContactNewAddressNotification(logger, optContact.get(), optAddress.get());
                 ContactAddress contactAddress = new ContactAddress(optContact.get(), optAddress.get(), optUserSession.get());
                 contactAddressDAO.insert(contactAddress);
                 return Optional.of(contactAddress);
-                // Add info logging for new contact_address association here
             } else {
-                // Add info logging here to notify system user has returned
+                SessionDataLogger.logExistingLeadNotification(logger, optContactAddress.get());
+
                 ContactAddress contactAddress = optContactAddress.get();
                 contactAddress.refreshLastUserSession(optUserSession.get());
-                contactAddress = contactAddressDAO.update(contactAddress);
-                System.out.println("Existing Lead. Lead updated with current user session: " + contactAddress);
+                SessionDataLogger.logUserSessionUpdateNotification(logger, contactAddress);
             }
         }
 
