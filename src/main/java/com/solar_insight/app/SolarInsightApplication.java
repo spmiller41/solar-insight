@@ -40,7 +40,6 @@ public class SolarInsightApplication {
 			System.out.
 			println("Booking Query URL: " + queryUrl);
 		};
-
 	}
 	 */
 
