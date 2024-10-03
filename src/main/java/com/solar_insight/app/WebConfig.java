@@ -15,7 +15,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://solar-insight.webflow.io")
+                        .allowedOrigins("https://solar-insight.webflow.io", "https://solar-insight-1d45e7d9dd6edcb619243eef9.webflow.io/")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
