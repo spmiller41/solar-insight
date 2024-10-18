@@ -17,6 +17,7 @@ public class SolarInsightApplication {
 		SpringApplication.run(SolarInsightApplication.class, args);
 	}
 
+	/*
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
@@ -76,6 +77,7 @@ public class SolarInsightApplication {
 
 		return request;
 	}
+	 */
 
 }
 
