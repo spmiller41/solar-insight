@@ -2,11 +2,16 @@ package com.solar_insight.app;
 
 import com.solar_insight.app.entity.Address;
 import com.solar_insight.app.entity.SolarEstimate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,12 +23,27 @@ public class SolarInsightApplication {
 	}
 
 	/*
+	@Value("${lob.api.key}")
+	private String lobApiKey;
+
+	@Value("${lob.postcard.url}")
+	private String lobPostcardUrl;
+
+	@Value("${lob.postcard.size}")
+	private String postcardSize;
+
+	@Value("${lob.postcard.temp.id.front}")
+	private String templateIdFront;
+
+	@Value("${lob.postcard.temp.id.back}")
+	private String templateIdBack;
+
+	@Autowired
+	private RestTemplate restTemplate;
+
 	@Bean
 	public CommandLineRunner demo() {
 		return (args) -> {
-			String templateId = "tmpl_4b243da5ff5fd97";
-			String size = "6x9";
-
 			Address address = new Address();
 			address.setStreet("254 Dogwood Road West");
 			address.setCity("Mastic Beach");
@@ -34,10 +54,31 @@ public class SolarInsightApplication {
 			solarEstimate.setEstimatedSavings(49500);
 			solarEstimate.setIncentives(13895);
 
-			Map<String, Object> mailerRequest = buildMailerRequest(address, solarEstimate, templateId, size);
-			System.out.println(mailerRequest);
+			Map<String, Object> mailerRequest = buildMailerRequest(address, solarEstimate, templateIdFront, templateIdBack, postcardSize);
+
+			// Test Mailer Send
+			sendPostcard(mailerRequest);
 
 		};
+	}
+
+	private HttpHeaders createHeaders() {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		String auth = lobApiKey + ":";
+		byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes());
+		String authHeader = "Basic " + new String(encodedAuth);
+		headers.set(HttpHeaders.AUTHORIZATION, authHeader);
+		return headers;
+	}
+
+	private void sendPostcard(Map<String, Object> mailerRequest) {
+		HttpHeaders headers = createHeaders();
+		HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(mailerRequest, headers);
+
+		ResponseEntity<String> response = restTemplate.exchange(lobPostcardUrl, HttpMethod.POST, httpEntity, String.class);
+
+		System.out.println(response);
 	}
 
 	private Map<String, String> buildFromAddress() {
@@ -51,11 +92,12 @@ public class SolarInsightApplication {
 		return fromAddress;
 	}
 
-	private Map<String, Object> buildMailerRequest(Address address, SolarEstimate solarEstimate, String templateId, String size) {
+	private Map<String, Object> buildMailerRequest(Address address, SolarEstimate solarEstimate, String templateIdFront, String templateIdBack, String size) {
 		Map<String, Object> request = new HashMap<>();
 
 		// Inline address object
 		Map<String, Object> toAddress = new HashMap<>();
+		toAddress.put("name", "Valued Customer");
 		toAddress.put("address_line1", address.getStreet());
 		toAddress.put("address_city", address.getCity());
 		toAddress.put("address_state", address.getState());
@@ -71,13 +113,16 @@ public class SolarInsightApplication {
 		request.put("to", toAddress);
 		request.put("from", buildFromAddress());
 		request.put("merge_variables", mergeVariables);
-		request.put("front", templateId);
+		request.put("front", templateIdFront);
+		request.put("back", templateIdBack);
 		request.put("size", size);
+		request.put("use_type", "marketing");
 		request.put("mail_type", "usps_first_class");
 
 		return request;
 	}
 	 */
+
 
 }
 
