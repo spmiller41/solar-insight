@@ -6,6 +6,7 @@ import com.solar_insight.app.dto.*;
 import com.solar_insight.app.entity.BookedConsultation;
 import com.solar_insight.app.entity.ContactAddress;
 import com.solar_insight.app.entity.InMarketZip;
+import com.solar_insight.app.lob_mailer.dto.TrackingEventData;
 import com.solar_insight.app.service.MarketDataService;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
@@ -153,6 +154,14 @@ public class SolarInsightRestController {
         System.out.println("Booking Data: " + bookingData);
         Optional<BookedConsultation> optBookedConsultation = sessionDataService.processUserSessionData(bookingData);
         optBookedConsultation.ifPresent(zohoIntegrationService::addBookingToEstimate);
+    }
+
+
+
+
+    @PostMapping("/mailer_tracking_events")
+    public void mailerTrackingEventsController(@RequestBody TrackingEventData trackingEventData) {
+        System.out.println(trackingEventData);
     }
 
 
