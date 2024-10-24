@@ -6,7 +6,10 @@ import com.solar_insight.app.dto.*;
 import com.solar_insight.app.entity.BookedConsultation;
 import com.solar_insight.app.entity.ContactAddress;
 import com.solar_insight.app.entity.InMarketZip;
+import com.solar_insight.app.entity.PostcardMailer;
+import com.solar_insight.app.lob_mailer.dto.CreateMailerResponse;
 import com.solar_insight.app.lob_mailer.dto.TrackingEventData;
+import com.solar_insight.app.lob_mailer.service.MailerDataService;
 import com.solar_insight.app.service.MarketDataService;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
@@ -15,6 +18,8 @@ import com.solar_insight.app.google_solar.utility.SolarConsumptionAnalyzer;
 import com.solar_insight.app.google_solar.utility.SolarOutcomeAnalysis;
 import com.solar_insight.app.ycbm.service.BookingUrlService;
 import com.solar_insight.app.zoho_crm.service.ZohoIntegrationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -28,6 +33,8 @@ import java.util.*;
 @RequestMapping("/api")
 public class SolarInsightRestController {
 
+    private static final Logger logger = LoggerFactory.getLogger(SolarInsightRestController.class);
+
     @Value("${google.maps.api.key}")
     private String googleMapsApiKey;
 
@@ -37,6 +44,7 @@ public class SolarInsightRestController {
     private final ZohoIntegrationService zohoIntegrationService;
     private final BookingUrlService bookingUrlService;
     private final MarketDataService marketDataService;
+    private final MailerDataService mailerDataService;
 
     @Autowired
     public SolarInsightRestController(SolarBuildingInsightService solarBuildingInsightService,
@@ -44,7 +52,8 @@ public class SolarInsightRestController {
                                       SessionDataService sessionDataService,
                                       ZohoIntegrationService zohoIntegrationService,
                                       BookingUrlService bookingUrlService,
-                                      MarketDataService marketDataService) {
+                                      MarketDataService marketDataService,
+                                      MailerDataService mailerDataService) {
 
         this.solarBuildingInsightService = solarBuildingInsightService;
         this.imageService = imageService;
@@ -52,6 +61,7 @@ public class SolarInsightRestController {
         this.zohoIntegrationService = zohoIntegrationService;
         this.bookingUrlService = bookingUrlService;
         this.marketDataService = marketDataService;
+        this.mailerDataService = mailerDataService;
     }
 
 
@@ -161,7 +171,12 @@ public class SolarInsightRestController {
 
     @PostMapping("/mailer_tracking_events")
     public void mailerTrackingEventsController(@RequestBody TrackingEventData trackingEventData) {
-        System.out.println(trackingEventData);
+        Optional<PostcardMailer> optMailer = mailerDataService.updateMailerStatusAndData(trackingEventData);
+        if (optMailer.isPresent()) {
+            logger.info("Mailer data updated successfully. Mailer: {}", optMailer.get());
+        } else {
+            logger.error("Mailer data was not able to be updated. Event Data: {}", trackingEventData);
+        }
     }
 
 

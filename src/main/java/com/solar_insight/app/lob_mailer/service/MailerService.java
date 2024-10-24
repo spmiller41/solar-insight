@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.entity.Address;
 import com.solar_insight.app.entity.SolarEstimate;
 import com.solar_insight.app.lob_mailer.dto.CreateMailerResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -17,6 +19,8 @@ import java.util.Optional;
 
 @Service
 public class MailerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(MailerService.class);
 
     @Value("${lob.api.key}")
     private String lobApiKey;
@@ -55,9 +59,14 @@ public class MailerService {
             ResponseEntity<String> response = restTemplate.exchange(lobPostcardUrl, HttpMethod.POST, httpEntity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                logger.info("Postcard request generated successfully. Status Code: {}", response.getStatusCode());
+
                 CreateMailerResponse mailerResponse = objectMapper.readValue(response.getBody(), CreateMailerResponse.class);
+                logger.info("Response Data [Parsed]: {}", mailerResponse);
+
                 return Optional.of(mailerResponse);
             } else {
+                logger.error("Error while generating create postcard request. Status Code: {} --- Response {}", response.getStatusCode(), response);
                 return Optional.empty();
             }
         } catch (Exception ex) {
