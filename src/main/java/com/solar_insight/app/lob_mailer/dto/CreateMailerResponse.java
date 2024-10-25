@@ -49,7 +49,7 @@ public class CreateMailerResponse {
     }
 
     public LocalDateTime getModifiedTimeInNewYork() {
-        return dateModified.withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime();
+        return convertToNewYorkTime(dateModified);
     }
 
     public void setDateModified(ZonedDateTime dateModified) {
@@ -57,11 +57,26 @@ public class CreateMailerResponse {
     }
 
     public LocalDateTime getSendDateInNewYork() {
-        return sendDate.withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime();
+        return convertToNewYorkTime(sendDate);
     }
 
     public void setSendDate(ZonedDateTime sendDate) {
         this.sendDate = sendDate;
+    }
+
+    /**
+     * Converts a ZonedDateTime to New York Time, preserving the same instant in time.
+     *
+     * @param dateTime The ZonedDateTime to convert.
+     * @return The converted LocalDateTime in New York Time.
+     */
+    private LocalDateTime convertToNewYorkTime(ZonedDateTime dateTime) {
+        if (dateTime == null) {
+            return null;
+        }
+        // Convert to New York time
+        ZonedDateTime newYorkTime = dateTime.withZoneSameInstant(ZoneId.of("America/New_York"));
+        return newYorkTime.toLocalDateTime();
     }
 
     @Override
@@ -74,5 +89,4 @@ public class CreateMailerResponse {
                 ", sendDate=" + getSendDateInNewYork() +
                 '}';
     }
-
 }

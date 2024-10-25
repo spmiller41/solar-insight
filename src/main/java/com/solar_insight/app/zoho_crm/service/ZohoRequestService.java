@@ -3,6 +3,7 @@ package com.solar_insight.app.zoho_crm.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.GeocodedLocation;
+import com.solar_insight.app.dto.ZohoMailerRequestDTO;
 import com.solar_insight.app.entity.*;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleAccess;
@@ -21,13 +22,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ZohoRequestService {
@@ -139,6 +138,40 @@ public class ZohoRequestService {
 
 
 
+    public void syncMailerRecordToZoho(PostcardMailer mailer, ZohoMailerRequestDTO mailerRequestData) {
+        String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
+        String crmRecordId = mailerRequestData.getSolarInsightLeadId();
+        String endpoint = baseUrl + ZohoModuleApiName.SOLAR_INSIGHT_LEADS + "/" + crmRecordId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonPayload = null;
+
+        try {
+            jsonPayload = objectMapper.writeValueAsString(createPayload(mailer, mailerRequestData));
+        } catch (Exception ex) {
+            System.out.println("There was an issue creating payload while attempting to send mailer record to Zoho.");
+        }
+
+        if (jsonPayload != null) {
+            HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
+            try {
+                ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, String.class);
+                System.out.println(response);
+            } catch (Exception ex) {
+                System.out.println(ex.getMessage());
+            }
+        } else {
+            System.out.println("Empty Payload. Unable to send new mailer data to Zoho.");
+        }
+    }
+
+
+
+
     private Map<String, Object> createPayload(Contact contact) {
         Map<String, Object> body = new HashMap<>();
         body.put("First_Name", contact.getFirstName());
@@ -220,6 +253,40 @@ public class ZohoRequestService {
 
 
 
+    private Map<String, Object> createPayload(PostcardMailer mailer, ZohoMailerRequestDTO mailerRequestData) {
+        Map<String, Object> newMailer = new HashMap<>();
+        newMailer.put("Status", mailer.getStatus());
+        newMailer.put("Expected_Delivery", formatDateForZoho(mailer.getExpectedDeliveryDate()));
+        newMailer.put("Reference_Id", mailer.getReferenceId());
+        newMailer.put("Send_Date", formatDateTimeForZoho(mailer.getSendDate()));
+
+        // Add all data sent over from the subform in regard to each possible previous mailer.
+        List<Map<String, Object>> mailerList = new ArrayList<>();
+        for (ZohoMailerRequestDTO.Mailer existingMailer : mailerRequestData.getMailers()) {
+            Map<String, Object> existingMailerMap = new HashMap<>();
+            existingMailerMap.put("Status", existingMailer.getStatus());
+            existingMailerMap.put("Expected_Delivery", existingMailer.getExpectedDelivery());
+            existingMailerMap.put("Reference_Id", existingMailer.getReferenceId());
+            existingMailerMap.put("Send_Date", existingMailer.getSendDate());
+            mailerList.add(existingMailerMap);
+        }
+
+        // Add new mailer now that the list has been restructured.
+        mailerList.add(newMailer);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("Mailers", mailerList);
+        body.put("User_Session_UUID", mailerRequestData.getUserSessionUUID());
+        body.put("Solar_Insight_Lead_Id", mailerRequestData.getSolarInsightLeadId());
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("data", List.of(body));
+
+        return payload;
+    }
+
+
+
 
     private Optional<String> uploadImageToZoho(File imageFile) {
         String accessToken = tokenService.getAccessToken(ZohoModuleAccess.FILE_UPLOAD.toString());
@@ -266,6 +333,19 @@ public class ZohoRequestService {
         return dateTime.atZone(ZoneId.of("America/New_York")).format(formatter);
     }
 
+
+
+
+    /**
+     * Formats the given LocalDate into a Zoho-compatible date string.
+     *
+     * @param date The LocalDate object to be formatted.
+     * @return A string formatted for Zoho expected date format.
+     */
+    private String formatDateForZoho(LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return date.format(formatter);
+    }
 
 
 

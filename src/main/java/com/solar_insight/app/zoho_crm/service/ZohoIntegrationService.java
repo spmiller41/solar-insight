@@ -2,7 +2,11 @@ package com.solar_insight.app.zoho_crm.service;
 
 import com.solar_insight.app.dao.*;
 import com.solar_insight.app.dto.UserSessionDTO;
+import com.solar_insight.app.dto.ZohoMailerRequestDTO;
 import com.solar_insight.app.entity.*;
+import com.solar_insight.app.lob_mailer.dto.CreateMailerResponse;
+import com.solar_insight.app.lob_mailer.service.MailerDataService;
+import com.solar_insight.app.lob_mailer.service.MailerService;
 import com.solar_insight.app.zoho_crm.logs.IntegrationLogger;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -10,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -23,6 +28,8 @@ public class ZohoIntegrationService {
     private final ZohoRequestService zohoRequestService;
     private final ContactDAO contactDAO;
     private final ContactAddressDAO contactAddressDAO;
+    private final MailerDataService mailerDataService;
+    private final MailerService mailerService;
 
     @Autowired
     public ZohoIntegrationService(UserSessionDAO userSessionDAO,
@@ -30,7 +37,8 @@ public class ZohoIntegrationService {
                                   SolarEstimateDAO estimateDAO,
                                   ZohoRequestService zohoRequestService,
                                   ContactDAO contactDAO,
-                                  ContactAddressDAO contactAddressDAO) {
+                                  ContactAddressDAO contactAddressDAO,
+                                  MailerDataService mailerDataService, MailerService mailerService) {
 
         this.userSessionDAO = userSessionDAO;
         this.addressDAO = addressDAO;
@@ -38,6 +46,8 @@ public class ZohoIntegrationService {
         this.zohoRequestService = zohoRequestService;
         this.contactDAO = contactDAO;
         this.contactAddressDAO = contactAddressDAO;
+        this.mailerDataService = mailerDataService;
+        this.mailerService = mailerService;
     }
 
 
@@ -127,6 +137,31 @@ public class ZohoIntegrationService {
             IntegrationLogger.logBookingUpdateSuccessInfo(optAddress.get().getZohoSolarInsightLeadId(), logger);
         } catch (IllegalArgumentException ex) {
             IntegrationLogger.logIllegalArgumentException(optAddress.get(), logger);
+        }
+    }
+
+
+    @Transactional
+    public void handleMailerAndSyncToZoho(ZohoMailerRequestDTO mailerRequestData) {
+        String sessionUUID = mailerRequestData.getUserSessionUUID();
+        Optional<Map<String, Object>> optMap = mailerDataService.getAddressAndEstimateData(sessionUUID);
+
+        if (optMap.isPresent()) {
+            Address address = (Address) optMap.get().get("address");
+            SolarEstimate estimate = (SolarEstimate) optMap.get().get("solar_estimate");
+
+            // Send postcard mailer
+            Optional<CreateMailerResponse> optMailerResponse = mailerService.sendPostcard(address, estimate);
+
+            if (optMailerResponse.isPresent()) {
+                // Insert mailer data
+                Optional<PostcardMailer> optMailer = mailerDataService.processMailerInsert(optMailerResponse.get(), address);
+
+                // Send to Zoho
+                optMailer.ifPresent(postcardMailer -> zohoRequestService.syncMailerRecordToZoho(postcardMailer, mailerRequestData));
+            } else {
+                System.out.println("Error while attempting to create mailers.");
+            }
         }
     }
 

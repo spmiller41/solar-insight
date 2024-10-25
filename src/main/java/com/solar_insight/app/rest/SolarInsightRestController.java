@@ -3,13 +3,11 @@ package com.solar_insight.app.rest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.GeocodedLocation;
 import com.solar_insight.app.dto.*;
-import com.solar_insight.app.entity.BookedConsultation;
-import com.solar_insight.app.entity.ContactAddress;
-import com.solar_insight.app.entity.InMarketZip;
-import com.solar_insight.app.entity.PostcardMailer;
+import com.solar_insight.app.entity.*;
 import com.solar_insight.app.lob_mailer.dto.CreateMailerResponse;
 import com.solar_insight.app.lob_mailer.dto.TrackingEventData;
 import com.solar_insight.app.lob_mailer.service.MailerDataService;
+import com.solar_insight.app.lob_mailer.service.MailerService;
 import com.solar_insight.app.service.MarketDataService;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
@@ -45,6 +43,7 @@ public class SolarInsightRestController {
     private final BookingUrlService bookingUrlService;
     private final MarketDataService marketDataService;
     private final MailerDataService mailerDataService;
+    private final MailerService mailerService;
 
     @Autowired
     public SolarInsightRestController(SolarBuildingInsightService solarBuildingInsightService,
@@ -53,7 +52,7 @@ public class SolarInsightRestController {
                                       ZohoIntegrationService zohoIntegrationService,
                                       BookingUrlService bookingUrlService,
                                       MarketDataService marketDataService,
-                                      MailerDataService mailerDataService) {
+                                      MailerDataService mailerDataService, MailerService mailerService) {
 
         this.solarBuildingInsightService = solarBuildingInsightService;
         this.imageService = imageService;
@@ -62,6 +61,7 @@ public class SolarInsightRestController {
         this.bookingUrlService = bookingUrlService;
         this.marketDataService = marketDataService;
         this.mailerDataService = mailerDataService;
+        this.mailerService = mailerService;
     }
 
 
@@ -177,6 +177,14 @@ public class SolarInsightRestController {
         } else {
             logger.error("Mailer data was not able to be updated. Event Data: {}", trackingEventData);
         }
+    }
+
+
+
+
+    @PostMapping("/create_mailer")
+    public void createMailerController(@RequestBody ZohoMailerRequestDTO postData) {
+        zohoIntegrationService.handleMailerAndSyncToZoho(postData);
     }
 
 
