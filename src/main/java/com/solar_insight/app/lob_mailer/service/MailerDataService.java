@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -37,6 +38,12 @@ public class MailerDataService {
         this.addressDAO = addressDAO;
         this.userSessionDAO = userSessionDAO;
         this.solarEstimateDAO = solarEstimateDAO;
+    }
+
+    public PostcardMailer updateMailer(PostcardMailer mailer) { return postcardMailerDAO.update(mailer); }
+
+    public Optional<List<PostcardMailer>> getAllMailerByAddressId(int addressId) {
+        return postcardMailerDAO.getAllMailerByAddressId(addressId);
     }
 
 

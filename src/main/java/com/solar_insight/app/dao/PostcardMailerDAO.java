@@ -6,6 +6,7 @@ import jakarta.persistence.NoResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -29,6 +30,18 @@ public class PostcardMailerDAO {
             return Optional.of(entityManager.createQuery(query, PostcardMailer.class)
                     .setParameter("referenceId", referenceId)
                     .getSingleResult());
+        } catch (NoResultException ex) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<List<PostcardMailer>> getAllMailerByAddressId(int addressId) {
+        String query = "SELECT pcm FROM PostcardMailer pcm WHERE pcm.addressId = :addressId";
+
+        try {
+            return Optional.of(entityManager.createQuery(query, PostcardMailer.class)
+                    .setParameter("addressId", addressId)
+                    .getResultList());
         } catch (NoResultException ex) {
             return Optional.empty();
         }

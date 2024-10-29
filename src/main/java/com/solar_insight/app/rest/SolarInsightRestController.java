@@ -4,10 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.solar_insight.app.GeocodedLocation;
 import com.solar_insight.app.dto.*;
 import com.solar_insight.app.entity.*;
-import com.solar_insight.app.lob_mailer.dto.CreateMailerResponse;
 import com.solar_insight.app.lob_mailer.dto.TrackingEventData;
 import com.solar_insight.app.lob_mailer.service.MailerDataService;
-import com.solar_insight.app.lob_mailer.service.MailerService;
 import com.solar_insight.app.service.MarketDataService;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
@@ -15,6 +13,7 @@ import com.solar_insight.app.google_solar.service.SolarBuildingInsightService;
 import com.solar_insight.app.google_solar.utility.SolarConsumptionAnalyzer;
 import com.solar_insight.app.google_solar.utility.SolarOutcomeAnalysis;
 import com.solar_insight.app.ycbm.service.BookingUrlService;
+import com.solar_insight.app.zoho_crm.dto.CreateMailerRequestDTO;
 import com.solar_insight.app.zoho_crm.service.ZohoIntegrationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,6 @@ public class SolarInsightRestController {
     private final BookingUrlService bookingUrlService;
     private final MarketDataService marketDataService;
     private final MailerDataService mailerDataService;
-    private final MailerService mailerService;
 
     @Autowired
     public SolarInsightRestController(SolarBuildingInsightService solarBuildingInsightService,
@@ -52,7 +50,7 @@ public class SolarInsightRestController {
                                       ZohoIntegrationService zohoIntegrationService,
                                       BookingUrlService bookingUrlService,
                                       MarketDataService marketDataService,
-                                      MailerDataService mailerDataService, MailerService mailerService) {
+                                      MailerDataService mailerDataService) {
 
         this.solarBuildingInsightService = solarBuildingInsightService;
         this.imageService = imageService;
@@ -61,7 +59,6 @@ public class SolarInsightRestController {
         this.bookingUrlService = bookingUrlService;
         this.marketDataService = marketDataService;
         this.mailerDataService = mailerDataService;
-        this.mailerService = mailerService;
     }
 
 
@@ -171,20 +168,20 @@ public class SolarInsightRestController {
 
     @PostMapping("/mailer_tracking_events")
     public void mailerTrackingEventsController(@RequestBody TrackingEventData trackingEventData) {
-        Optional<PostcardMailer> optMailer = mailerDataService.updateMailerStatusAndData(trackingEventData);
-        if (optMailer.isPresent()) {
-            logger.info("Mailer data updated successfully. Mailer: {}", optMailer.get());
-        } else {
-            logger.error("Mailer data was not able to be updated. Event Data: {}", trackingEventData);
-        }
+        zohoIntegrationService.updateMailerAndSyncToZoho(trackingEventData);
     }
 
 
 
 
     @PostMapping("/create_mailer")
-    public void createMailerController(@RequestBody ZohoMailerRequestDTO postData) {
-        zohoIntegrationService.handleMailerAndSyncToZoho(postData);
+    public ResponseEntity<String> createMailerController(@RequestBody CreateMailerRequestDTO postData) {
+        String message = zohoIntegrationService.createMailerAndSyncToZoho(postData);
+
+        // Determine the status based on the content of the message
+        HttpStatus status = message.contains("processed") ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+
+        return ResponseEntity.status(status).body(message);
     }
 
 

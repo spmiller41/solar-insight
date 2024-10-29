@@ -3,9 +3,13 @@ package com.solar_insight.app.zoho_crm.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solar_insight.app.GeocodedLocation;
-import com.solar_insight.app.dto.ZohoMailerRequestDTO;
+import com.solar_insight.app.lob_mailer.MailerStatus;
+import com.solar_insight.app.lob_mailer.dto.TrackingEventData;
+import com.solar_insight.app.zoho_crm.dto.CreateMailerRequestDTO;
 import com.solar_insight.app.entity.*;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
+import com.solar_insight.app.zoho_crm.dto.MailerDTO;
+import com.solar_insight.app.zoho_crm.dto.FetchedSubformData;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleAccess;
 import com.solar_insight.app.zoho_crm.enums.ZohoModuleApiName;
 import com.solar_insight.app.zoho_crm.logs.RequestLogger;
@@ -69,6 +73,7 @@ public class ZohoRequestService {
 
         if (jsonPayload != null) {
             HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
+
             try {
                 ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
                 if (response.getStatusCode().is2xxSuccessful()) {
@@ -82,6 +87,7 @@ public class ZohoRequestService {
                     RequestLogger.logPostStatus(response, logger);
                     return Optional.empty();
                 }
+
             } catch (Exception ex) {
                 RequestLogger.logExceptionMsg(solarEstimate, logger, ex);
                 return Optional.empty();
@@ -90,6 +96,80 @@ public class ZohoRequestService {
             RequestLogger.logEmptyPayloadErr(logger);
             return Optional.empty();
         }
+    }
+
+
+
+
+    public void updateMailerSubformRecord(FetchedSubformData fetchedData, TrackingEventData eventData) {
+        String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
+        String endpoint = String.format("%s/%s/%s",
+                baseUrl, ZohoModuleApiName.SOLAR_INSIGHT_LEADS, fetchedData.getParentId());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonPayload = null;
+
+        Optional<Map<String, Object>> optPayload = createPayload(fetchedData, eventData);
+        if (optPayload.isPresent()) {
+            try {
+                jsonPayload = objectMapper.writeValueAsString(optPayload.get());
+            } catch (Exception ex) {
+                logger.error("Exception occurred while attempting to serialize data during tracking event update to Zoho. Message: {}", ex.getMessage());
+            }
+        } else {
+            logger.error("Payload could not be created to update Zoho with tracking event. Fetched Data: {} --- Event Data: {}", fetchedData, eventData);
+            return;
+        }
+
+        if (jsonPayload != null) {
+            HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
+
+            try {
+                ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, String.class);
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    logger.info("Tracking event updated in Zoho successfully. Status Code: {}", response.getStatusCode());
+                } else if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+                    logger.error("Tracking event could not be updated in Zoho. Status Code: {}", response.getStatusCode());
+                }
+            } catch (Exception ex) {
+                logger.error("Exception occurred while attempting exchange with Zoho. Message: {}", ex.getMessage());
+            }
+        }
+    }
+
+
+
+
+    public Optional<String> getSolarInsightLeadById(String recordId) {
+        String url = String.format("%s/%s/%s", baseUrl, ZohoModuleApiName.SOLAR_INSIGHT_LEADS, recordId);
+        String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        // Make the GET request
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                logger.info("Fetch Zoho Solar Insight data successful. Status Code: {}", response.getStatusCode());
+                return Optional.ofNullable(response.getBody());
+            } else if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+                logger.error("Fetch Zoho Solar Insight Error. Status Code: {}", response.getStatusCode());
+            }
+        } catch (Exception ex) {
+            logger.error("Fetch Zoho Solar Insight Exception Occurred. Message: {}", ex.getMessage());
+        }
+
+        return Optional.empty();
     }
 
 
@@ -138,10 +218,11 @@ public class ZohoRequestService {
 
 
 
-    public void syncMailerRecordToZoho(PostcardMailer mailer, ZohoMailerRequestDTO mailerRequestData) {
+    public ResponseEntity<String> syncMailerRecordToZoho(PostcardMailer mailer, CreateMailerRequestDTO mailerRequestData) {
         String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
         String crmRecordId = mailerRequestData.getSolarInsightLeadId();
         String endpoint = baseUrl + ZohoModuleApiName.SOLAR_INSIGHT_LEADS + "/" + crmRecordId;
+        ResponseEntity<String> response = null;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -149,24 +230,31 @@ public class ZohoRequestService {
 
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonPayload = null;
+        Map<String, Object> payload = createPayload(mailer, mailerRequestData);
 
         try {
-            jsonPayload = objectMapper.writeValueAsString(createPayload(mailer, mailerRequestData));
+            jsonPayload = objectMapper.writeValueAsString(payload);
         } catch (Exception ex) {
-            System.out.println("There was an issue creating payload while attempting to send mailer record to Zoho.");
+            logger.error("Error occurred in ObjectMapper. There was an issue while attempting to serialize payload for mailer creation. Payload: {}", jsonPayload);
         }
 
         if (jsonPayload != null) {
             HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
+
             try {
-                ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, String.class);
-                System.out.println(response);
+                response = restTemplate.exchange(endpoint, HttpMethod.PUT, httpEntity, String.class);
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    logger.info("Mailer data sent to Zoho Successfully. Status Code: {}", response.getStatusCode());
+                } else if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+                    logger.error("Error while attempting to send mailer data to Zoho: {}", response.getStatusCode());
+                }
             } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+                logger.error("There was an issue while attempting to send mailer data to Zoho");
             }
-        } else {
-            System.out.println("Empty Payload. Unable to send new mailer data to Zoho.");
         }
+
+        return response;
     }
 
 
@@ -253,25 +341,15 @@ public class ZohoRequestService {
 
 
 
-    private Map<String, Object> createPayload(PostcardMailer mailer, ZohoMailerRequestDTO mailerRequestData) {
+    private Map<String, Object> createPayload(PostcardMailer mailer, CreateMailerRequestDTO mailerRequestData) {
+        List<Map<String, Object>> mailerList = new ArrayList<>();
         Map<String, Object> newMailer = new HashMap<>();
         newMailer.put("Status", mailer.getStatus());
         newMailer.put("Expected_Delivery", formatDateForZoho(mailer.getExpectedDeliveryDate()));
         newMailer.put("Reference_Id", mailer.getReferenceId());
         newMailer.put("Send_Date", formatDateTimeForZoho(mailer.getSendDate()));
 
-        // Add all data sent over from the subform in regard to each possible previous mailer.
-        List<Map<String, Object>> mailerList = new ArrayList<>();
-        for (ZohoMailerRequestDTO.Mailer existingMailer : mailerRequestData.getMailers()) {
-            Map<String, Object> existingMailerMap = new HashMap<>();
-            existingMailerMap.put("Status", existingMailer.getStatus());
-            existingMailerMap.put("Expected_Delivery", existingMailer.getExpectedDelivery());
-            existingMailerMap.put("Reference_Id", existingMailer.getReferenceId());
-            existingMailerMap.put("Send_Date", existingMailer.getSendDate());
-            mailerList.add(existingMailerMap);
-        }
-
-        // Add new mailer now that the list has been restructured.
+        // Add new mailer to list for payload.
         mailerList.add(newMailer);
 
         Map<String, Object> body = new HashMap<>();
@@ -283,6 +361,38 @@ public class ZohoRequestService {
         payload.put("data", List.of(body));
 
         return payload;
+    }
+
+
+
+
+    private Optional<Map<String, Object>> createPayload(FetchedSubformData fetchedData, TrackingEventData eventData) {
+        Map<String, Object> updatedMailer = new HashMap<>();
+
+        // Find and update the specific mailer record
+        for (MailerDTO mailerDTO : fetchedData.getMailerList()) {
+            if (mailerDTO.getReferenceId().equals(eventData.getReferenceId())) {
+                updatedMailer.put("id", mailerDTO.getRecordId());
+                updatedMailer.put("Status", MailerStatus.fromLobEvent(eventData.getEvent()));
+                updatedMailer.put("Expected_Delivery", formatDateForZoho(eventData.getExpectedDeliveryDate()));
+                break;  // Stop after finding the correct mailer
+            }
+        }
+
+        // If we found a mailer to update, wrap it in the Zoho structure
+        if (!updatedMailer.isEmpty()) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("id", fetchedData.getParentId());      // Parent record ID
+            body.put("Mailers", List.of(updatedMailer));    // List containing the updated mailer
+
+            // Wrap the parent record in "data" as expected by Zoho
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("data", List.of(body));
+
+            return Optional.of(payload);
+        } else {
+            return Optional.empty();
+        }
     }
 
 
@@ -322,7 +432,7 @@ public class ZohoRequestService {
 
 
 
-    /*
+    /**
      * Formats the given LocalDateTime into a Zoho-compatible date-time string.
      *
      * @param dateTime The LocalDateTime object to be formatted.
