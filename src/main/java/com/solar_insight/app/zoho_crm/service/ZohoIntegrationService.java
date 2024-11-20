@@ -88,7 +88,8 @@ public class ZohoIntegrationService {
 
         // Send address, estimate, and session uuid to Zoho CRM.
         Optional<String> optZohoRecordId = zohoRequestService
-                .createSolarInsightLead(optAddress.get(), optSolarEstimate.get(), optUserSession.get().getSessionUUID());
+                .createSolarInsightLead(optAddress.get(), optSolarEstimate.get(),
+                        optUserSession.get().getSessionUUID(), optUserSession.get().getReferrer());
 
         // Update this address with the returned record id from Zoho.
         if (optZohoRecordId.isPresent()) {

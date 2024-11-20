@@ -54,7 +54,7 @@ public class ZohoRequestService {
 
 
 
-    public Optional<String> createSolarInsightLead(Address address, SolarEstimate solarEstimate, String sessionUUID) {
+    public Optional<String> createSolarInsightLead(Address address, SolarEstimate solarEstimate, String sessionUUID, String referrer) {
         String accessToken = tokenService.getAccessToken(ZohoModuleAccess.CUSTOM_MODULE.toString());
         String endpoint = baseUrl + ZohoModuleApiName.SOLAR_INSIGHT_LEADS;
 
@@ -65,7 +65,7 @@ public class ZohoRequestService {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonPayload = null;
         try {
-            jsonPayload = objectMapper.writeValueAsString(createPayload(address, solarEstimate, sessionUUID));
+            jsonPayload = objectMapper.writeValueAsString(createPayload(address, solarEstimate, sessionUUID, referrer));
         } catch (Exception ex) {
             // Add more organized error logging here
             System.err.println(ex.getMessage());
@@ -292,7 +292,7 @@ public class ZohoRequestService {
 
 
 
-    private Map<String, Object> createPayload(Address address, SolarEstimate solarEstimate, String sessionUUID) {
+    private Map<String, Object> createPayload(Address address, SolarEstimate solarEstimate, String sessionUUID, String referrer) {
         Optional<String> optZohoFileId = Optional.empty();
 
         try {
@@ -324,6 +324,7 @@ public class ZohoRequestService {
         body.put("Incentives", solarEstimate.getIncentives());
         body.put("Annual_AC_Production", solarEstimate.getAnnualProductionAc());
         body.put("User_Session_UUID", sessionUUID);
+        body.put("Referrer1", referrer);
 
         // Wrap the Encrypted_Id for the Satellite_Image field
         optZohoFileId.ifPresent(zohoFileId -> {

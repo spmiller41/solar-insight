@@ -26,11 +26,15 @@ public class UserSession {
     @Column(name = "address_id")
     private int addressId;
 
+    @Column(name = "referrer")
+    private String referrer;
+
     public UserSession(PreliminaryDataDTO data, Address address, String sessionUUID) {
         this.sessionUUID = sessionUUID;
         this.ipAddress = data.getClientIp();
         this.createdAt = LocalDateTime.now();
         this.addressId = address.getId();
+        this.referrer = data.getReferrer();
     }
 
     public void associateAddress(Address address) {
@@ -78,6 +82,10 @@ public class UserSession {
     public void setAddressId(int addressId) {
         this.addressId = addressId;
     }
+
+    public String getReferrer() { return referrer; }
+
+    public void setReferrer(String referrer) { this.referrer = referrer; }
 
     @Override
     public String toString() {

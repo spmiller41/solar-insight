@@ -36,6 +36,9 @@ public class PreliminaryDataDTO {
     @JsonProperty("sessionUUID")
     private String sessionUUID;
 
+    @JsonProperty("referrer")
+    private String referrer;
+
     public String getStreet() { return street; }
 
     public void setStreet(String street) { this.street = street; }
@@ -82,6 +85,14 @@ public class PreliminaryDataDTO {
         }
     }
 
+    public String getReferrer() {
+        return referrer;
+    }
+
+    public void setReferrer(String referrer) {
+        this.referrer = referrer;
+    }
+
     @Override
     public String toString() {
         return "PreliminaryDataDTO{" +
@@ -95,6 +106,7 @@ public class PreliminaryDataDTO {
                 ", state='" + state + '\'' +
                 ", zip='" + zip + '\'' +
                 ", sessionUUID='" + sessionUUID + '\'' +
+                ", referrer='" + referrer + '\'' +
                 '}';
     }
 
