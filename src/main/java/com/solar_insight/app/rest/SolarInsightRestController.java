@@ -6,6 +6,7 @@ import com.solar_insight.app.dto.*;
 import com.solar_insight.app.entity.*;
 import com.solar_insight.app.lob_mailer.dto.TrackingEventData;
 import com.solar_insight.app.lob_mailer.service.MailerDataService;
+import com.solar_insight.app.lob_mailer.service.MailerService;
 import com.solar_insight.app.service.MarketDataService;
 import com.solar_insight.app.service.SessionDataService;
 import com.solar_insight.app.google_solar.service.SatelliteImageService;
@@ -41,7 +42,6 @@ public class SolarInsightRestController {
     private final ZohoIntegrationService zohoIntegrationService;
     private final BookingUrlService bookingUrlService;
     private final MarketDataService marketDataService;
-    private final MailerDataService mailerDataService;
 
     @Autowired
     public SolarInsightRestController(SolarBuildingInsightService solarBuildingInsightService,
@@ -49,8 +49,7 @@ public class SolarInsightRestController {
                                       SessionDataService sessionDataService,
                                       ZohoIntegrationService zohoIntegrationService,
                                       BookingUrlService bookingUrlService,
-                                      MarketDataService marketDataService,
-                                      MailerDataService mailerDataService) {
+                                      MarketDataService marketDataService) {
 
         this.solarBuildingInsightService = solarBuildingInsightService;
         this.imageService = imageService;
@@ -58,7 +57,6 @@ public class SolarInsightRestController {
         this.zohoIntegrationService = zohoIntegrationService;
         this.bookingUrlService = bookingUrlService;
         this.marketDataService = marketDataService;
-        this.mailerDataService = mailerDataService;
     }
 
 
@@ -182,6 +180,16 @@ public class SolarInsightRestController {
         HttpStatus status = message.contains("processed") ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
 
         return ResponseEntity.status(status).body(message);
+    }
+
+
+
+
+    @PostMapping("/mailer_booking")
+    public void mailerBookingController(@RequestBody MailerBookingDTO bookingData) {
+        MailerBooking mBooking = new MailerBooking(bookingData);
+        mBooking = sessionDataService.insertMailerBooking(mBooking);
+        System.out.println(mBooking);
     }
 
 

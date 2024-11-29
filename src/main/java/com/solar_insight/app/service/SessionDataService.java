@@ -35,6 +35,7 @@ public class SessionDataService {
     private final ContactDAO contactDAO;
     private final ContactAddressDAO contactAddressDAO;
     private final BookedConsultationDAO bookedConsultationDAO;
+    private final MailerBookingDAO mailerBookingDAO;
 
     @Autowired
     public SessionDataService(AddressDAO addressDAO,
@@ -42,7 +43,8 @@ public class SessionDataService {
                               SolarEstimateDAO solarEstimateDAO,
                               ContactDAO contactDAO,
                               ContactAddressDAO contactAddressDAO,
-                              BookedConsultationDAO bookedConsultationDAO) {
+                              BookedConsultationDAO bookedConsultationDAO,
+                              MailerBookingDAO mailerBookingDAO) {
 
         this.addressDAO = addressDAO;
         this.userSessionDAO = userSessionDAO;
@@ -50,6 +52,7 @@ public class SessionDataService {
         this.contactDAO = contactDAO;
         this.contactAddressDAO = contactAddressDAO;
         this.bookedConsultationDAO = bookedConsultationDAO;
+        this.mailerBookingDAO = mailerBookingDAO;
     }
 
 
@@ -309,6 +312,13 @@ public class SessionDataService {
             // Add more organized logging for this error
             System.err.println("Could not find estimate...");
         }
+    }
+
+
+    @Transactional
+    public MailerBooking insertMailerBooking(MailerBooking mailerBooking) {
+        mailerBookingDAO.insert(mailerBooking);
+        return mailerBooking;
     }
 
 }
