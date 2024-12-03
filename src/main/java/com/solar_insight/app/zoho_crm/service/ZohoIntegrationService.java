@@ -37,6 +37,7 @@ public class ZohoIntegrationService {
     private final ContactAddressDAO contactAddressDAO;
     private final MailerDataService mailerDataService;
     private final MailerService mailerService;
+    private final MailerBookingDAO mailerBookingDAO;
 
     @Autowired
     public ZohoIntegrationService(UserSessionDAO userSessionDAO,
@@ -45,7 +46,8 @@ public class ZohoIntegrationService {
                                   ZohoRequestService zohoRequestService,
                                   ContactDAO contactDAO,
                                   ContactAddressDAO contactAddressDAO,
-                                  MailerDataService mailerDataService, MailerService mailerService) {
+                                  MailerDataService mailerDataService, MailerService mailerService,
+                                  MailerBookingDAO mailerBookingDAO) {
 
         this.userSessionDAO = userSessionDAO;
         this.addressDAO = addressDAO;
@@ -55,6 +57,7 @@ public class ZohoIntegrationService {
         this.contactAddressDAO = contactAddressDAO;
         this.mailerDataService = mailerDataService;
         this.mailerService = mailerService;
+        this.mailerBookingDAO = mailerBookingDAO;
     }
 
 
@@ -270,5 +273,15 @@ public class ZohoIntegrationService {
         zohoRequestService.updateMailerSubformRecord(fetchedData, trackingEventData);
     }
 
+
+
+
+    /**
+     * Creates a lead in Zoho with the appointment generated through a mailer.
+     * @param mBooking the customer/booking data
+     */
+    public void createLeadFromMailerAppointment(MailerBooking mBooking) {
+        zohoRequestService.createLeadFromMailerAppointment(mBooking);
+    }
 
 }

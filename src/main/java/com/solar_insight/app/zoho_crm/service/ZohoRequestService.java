@@ -260,6 +260,75 @@ public class ZohoRequestService {
 
 
 
+    public void createLeadFromMailerAppointment(MailerBooking mBooking) {
+        String accessToken = tokenService.getAccessToken(ZohoModuleAccess.LEADS.toString());
+        String endpoint = baseUrl + ZohoModuleApiName.LEADS;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonPayload = null;
+
+        try {
+            jsonPayload = objectMapper.writeValueAsString(createPayload(mBooking));
+        } catch (Exception ex) {
+            logger.error("Error while attempting to generate payload for zoho lead from mailer. Message: {}", ex.getMessage());
+        }
+
+        if (jsonPayload != null) {
+            HttpEntity<String> httpEntity = new HttpEntity<>(jsonPayload, headers);
+
+            try {
+                ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    logger.info("Zoho lead created with appointment from mailer. Status Code: {}", response.getStatusCode());
+                } else if (response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError()) {
+                    logger.error("Error while attempting to create zoho lead with appointment from mailer. Status Code: {}", response.getStatusCode());
+                } else {
+                    logger.warn("Zoho lead creation attempt with appointment from mailer. Status Code: {}", response.getStatusCode());
+                }
+            } catch (Exception ex) {
+                logger.error("Exception occurred while attempting to generate zoho lead with appointment from mailer. Message: {}", ex.getMessage());
+            }
+        } else {
+            logger.error("Empty payload while attempting to create zoho lead with appointment from mailer");
+        }
+    }
+
+
+
+
+    private Map<String, Object> createPayload(MailerBooking mBooking) {
+        Map<String, Object> body = new HashMap<>();
+
+        body.put("Owner", "3880966000020271001");
+        body.put("Appointment", formatDateTimeForZoho(mBooking.getStartsAt()));
+        body.put("Description", "Appointment Type: " + mBooking.getAppointmentType());
+        body.put("Lead_Source", "Mailer");
+        body.put("Sub_Source", "Solar Insight");
+        body.put("Product1", List.of("Residential Solar"));
+        body.put("First_Name", mBooking.getFirstName());
+        body.put("Last_Name", mBooking.getLastName());
+        body.put("Email", mBooking.getEmail());
+        body.put("Phone", mBooking.getPhone());
+        body.put("Mobile", mBooking.getPhone());
+        body.put("Street", mBooking.getStreet());
+        body.put("City", mBooking.getCity());
+        body.put("State", mBooking.getState());
+        body.put("Zip_Code", mBooking.getZip());
+
+        // Wrap the record inside a "data" key, as Zoho expects an array of records
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("data", List.of(body));
+
+        return payload;
+    }
+
+
+
+
     private Map<String, Object> createPayload(Contact contact) {
         Map<String, Object> body = new HashMap<>();
         body.put("First_Name", contact.getFirstName());

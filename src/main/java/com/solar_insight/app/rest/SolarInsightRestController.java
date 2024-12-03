@@ -189,7 +189,7 @@ public class SolarInsightRestController {
     public void mailerBookingController(@RequestBody MailerBookingDTO bookingData) {
         MailerBooking mBooking = new MailerBooking(bookingData);
         mBooking = sessionDataService.insertMailerBooking(mBooking);
-        System.out.println(mBooking);
+        zohoIntegrationService.createLeadFromMailerAppointment(mBooking);
     }
 
 

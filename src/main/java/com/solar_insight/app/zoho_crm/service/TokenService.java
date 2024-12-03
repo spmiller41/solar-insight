@@ -48,6 +48,9 @@ public class TokenService {
     @Value("${zoho.file.upload.refresh.token}")
     private String fileUploadRefreshToken;
 
+    @Value("${zoho.leads.refresh.token}")
+    private String zohoLeadsRefreshToken;
+
     @Value("${zoho.client.id}")
     private String clientId;
 
@@ -96,6 +99,7 @@ public class TokenService {
         return switch (moduleType) {
             case "custom_module" -> customModuleRefreshToken;
             case "file_upload" -> fileUploadRefreshToken;
+            case "Leads" -> zohoLeadsRefreshToken;
             default -> throw new IllegalArgumentException("Unknown module type: " + moduleType);
         };
     }
