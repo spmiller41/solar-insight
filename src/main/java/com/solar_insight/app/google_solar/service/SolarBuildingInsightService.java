@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -42,32 +43,50 @@ public class SolarBuildingInsightService {
 
 
     /**
-     * Fetches solar data for a given location.
+     * Attempts to retrieve solar data for a given location by progressively
+     * degrading the quality of data from HIGH to MEDIUM to LOW if necessary.
+     * Handles 4xx errors by trying the next quality level and logs warnings
+     * for unavailable data at each level. Returns null if all attempts fail.
      *
-     * @param location The geocoded location.
-     * @return The JSON node containing the solar data.
+     * @param location The geocoded location (latitude and longitude) to query for solar data.
+     * @return A JsonNode containing the solar data, or null if data is unavailable.
      */
     public JsonNode getSolarData(GeocodedLocation location) {
-        String requestURL = String.format("%s?location.latitude=%s&location.longitude=%s&requiredQuality=HIGH&key=%s",
-                googleBuildingInsightBaseURL, location.latitude(), location.longitude(), googleMapAPIKey);
+        String[] qualityLevels = {"HIGH", "MEDIUM", "LOW"};
+        String response = null;
 
-        String response;
-        try {
-            response = restTemplate.getForObject(requestURL, String.class);
-        } catch (Exception ex) {
-            RestTemplateLogger.requestError(SolarBuildingInsightService.class, ex, logger);
-            return null;
+        for (String quality : qualityLevels) {
+            String requestUrl = String.format(
+                    "%s?location.latitude=%s&location.longitude=%s&requiredQuality=%s&key=%s",
+                    googleBuildingInsightBaseURL, location.latitude(), location.longitude(), quality, googleMapAPIKey);
+
+            try {
+                response = restTemplate.getForObject(requestUrl, String.class);
+                if (response != null) {
+                    break;
+                }
+            } catch (HttpClientErrorException e) {
+                if (!e.getStatusCode().is4xxClientError()) {
+                    RestTemplateLogger.requestError(SolarBuildingInsightService.class, e, logger);
+                    return null;
+                }
+                logger.warn("{} quality data not available for location: {}", quality, location);
+            } catch (Exception e) {
+                RestTemplateLogger.requestError(SolarBuildingInsightService.class, e, logger);
+                return null;
+            }
         }
 
-        JsonNode jsonNode;
-        try {
-            jsonNode = objectMapper.readTree(response);
-        } catch (JsonProcessingException ex) {
-            SolarBuildingInsightLogger.parsingError(location, ex, logger);
-            return null;
+        if (response != null) {
+            try {
+                return objectMapper.readTree(response); // Parse the JSON response
+            } catch (JsonProcessingException e) {
+                SolarBuildingInsightLogger.parsingError(location, e, logger);
+            }
         }
 
-        return jsonNode;
+        logger.error("No data available for location: {}, {}", location.latitude(), location.longitude());
+        return null;
     }
 
 
