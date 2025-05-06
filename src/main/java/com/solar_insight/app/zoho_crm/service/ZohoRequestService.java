@@ -318,6 +318,7 @@ public class ZohoRequestService {
         body.put("City", mBooking.getCity());
         body.put("State", mBooking.getState());
         body.put("Zip_Code", mBooking.getZip());
+        body.put("UTM_Campaign", mBooking.getPromo());
 
         // Wrap the record inside a "data" key, as Zoho expects an array of records
         Map<String, Object> payload = new HashMap<>();

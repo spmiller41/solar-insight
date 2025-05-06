@@ -48,6 +48,9 @@ public class MailerBooking {
     @Column(name = "zip")
     private String zip;
 
+    @Column(name = "promo")
+    private String promo;
+
     public MailerBooking() {}
 
     public MailerBooking(MailerBookingDTO bookingData) {
@@ -62,6 +65,7 @@ public class MailerBooking {
         this.city = bookingData.getCity();
         this.state = bookingData.getState();
         this.zip = bookingData.getZip();
+        this.promo = bookingData.getPromo();
     }
 
     public int getId() {
@@ -160,6 +164,10 @@ public class MailerBooking {
         this.zip = zip;
     }
 
+    public String getPromo() { return promo; }
+
+    public void setPromo(String promo) { this.promo = promo; }
+
     @Override
     public String toString() {
         return "MailerBooking{" +
@@ -175,6 +183,7 @@ public class MailerBooking {
                 ", city='" + city + '\'' +
                 ", state='" + state + '\'' +
                 ", zip='" + zip + '\'' +
+                ", promo='" + promo + '\'' +
                 '}';
     }
 

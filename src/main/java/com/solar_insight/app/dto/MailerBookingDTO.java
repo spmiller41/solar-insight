@@ -39,6 +39,9 @@ public class MailerBookingDTO {
     @JsonProperty("zip")
     private String zip;
 
+    @JsonProperty("promo")
+    private String promo;
+
     public LocalDateTime getStartsAt() {
         return startsAt;
     }
@@ -127,6 +130,10 @@ public class MailerBookingDTO {
         this.zip = zip;
     }
 
+    public String getPromo() { return promo; }
+
+    public void setPromo(String promo) { this.promo = promo; }
+
     @Override
     public String toString() {
         return "MailerBookingDTO{" +
@@ -141,6 +148,7 @@ public class MailerBookingDTO {
                 ", city='" + city + '\'' +
                 ", state='" + state + '\'' +
                 ", zip='" + zip + '\'' +
+                ", promo='" + promo + '\'' +
                 '}';
     }
 
