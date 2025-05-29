@@ -18,7 +18,8 @@ public class WebConfig {
                         .allowedOrigins("https://solar-insight.webflow.io",
                                 "https://solar-insight-1d45e7d9dd6edcb619243eef9.webflow.io/",
                                 "https://newyorkpowersolutions.com/",
-                                "https://www.lipowersolutions.com/")
+                                "https://www.lipowersolutions.com/",
+                                "https://prosolarrepair.com/")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
